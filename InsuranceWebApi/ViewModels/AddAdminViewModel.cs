@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace InsuranceWebApi.Controllers
+namespace InsuranceWebApi.ViewModels
 {
     public class AddAdminViewModel
     {
@@ -13,7 +13,6 @@ namespace InsuranceWebApi.Controllers
         public string Email { get; set; }
         [Required(ErrorMessage = "Password is required.")]
         public string Password { get; set; }
-        public DateTime DoB { get; set; }
         public string UserName { get; set; }
     }
 }

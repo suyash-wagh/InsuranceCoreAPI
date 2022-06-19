@@ -1,10 +1,21 @@
 ﻿using InsuranceLib.BL.Services;
 using InsuranceLib.DAL;
+using InsuranceLib.DAL.Helpers;
 using InsuranceLib.DAL.Models;
+using InsuranceWebApi.Helpers;
+using InsuranceWebApi.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using System;
+using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace InsuranceWebApi.Controllers
@@ -14,28 +25,19 @@ namespace InsuranceWebApi.Controllers
     public class UsersController : ControllerBase
     {
         private UsersService service;
+        private readonly UserManager<User> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly IConfiguration _configuration;
 
-        public UsersController(UsersService service)
+        public UsersController(UsersService service, IConfiguration configuration, UserManager<User> userManager, RoleManager<IdentityRole> roleManager)
         {
             this.service = service;
+            this._userManager = userManager;
+            this._roleManager = roleManager;
+            this._configuration = configuration;
         }
 
-        [HttpPost("addAdmin")]
-        public async Task<IActionResult> addAdmin([FromBody] AddAdminViewModel adminVm)
-        {
-            await service.AddAdmin(new User()
-            {
-                FirstName = adminVm.FirstName,
-                LastName = adminVm.LastName,
-                Email = adminVm.Email,
-                PasswordHash = adminVm.Password,
-                DoB = adminVm.DoB,
-                Age = DateTime.Now.AddYears(-adminVm.DoB.Year).Year,
-                UserName = adminVm.UserName,
-        });
-            return Ok(adminVm);
-        }
-
+        [Authorize(Roles = Roles.Admin)]
         [HttpGet("")]
         public async Task<IActionResult> GetAllUsers()
         {
@@ -48,8 +50,9 @@ namespace InsuranceWebApi.Controllers
             return Ok(await service.GetUserById(id));
         }
 
-        [HttpPut("update/{id}")]
-        public async Task<IActionResult> UpdateUser([FromBody] AddAdminViewModel userVm, string id)
+        [Authorize(Roles = Roles.Admin)]
+        [HttpPut("update-admin/{id}")]
+        public async Task<IActionResult> UpdateAdmin([FromBody] AddAdminViewModel userVm)
         {
             User user = new User()
             {
@@ -58,10 +61,30 @@ namespace InsuranceWebApi.Controllers
                 Email = userVm.Email,
                 PasswordHash = userVm.Password
             };
-            await service.Update(id, user);
+            await service.Update(user);
             return Ok("User updated.");
         }
 
+        [HttpPut("update-user/{id}")]
+        public async Task<IActionResult> UpdateUser([FromBody] AddUserViewModel userVm)
+        {
+            User user = new User()
+            {
+                FirstName = userVm.FirstName,
+                LastName = userVm.LastName,
+                Email = userVm.Email,
+                PasswordHash = userVm.Password,
+                UserName = userVm.UserName,
+                DoB = userVm.DoB,
+                Age = DateTime.Now.AddYears(-userVm.DoB.Year).Year,
+                PhoneNumber = userVm.PhoneNumber
+
+            };
+            await service.Update(user);
+            return Ok("User updated.");
+        }
+
+        [Authorize(Roles = Roles.Admin)]
         [HttpDelete("delete/{id}")]
         public async Task<IActionResult> DeleteUser(string id)
         {
@@ -70,5 +93,270 @@ namespace InsuranceWebApi.Controllers
             return Ok("User deleted");
         }
 
+
+        //JWT Token---------------------------------------------------------------------------------------------------->
+
+
+        private async Task<JwtTokenViewModel> GenerateJwtToken(User user)
+        {
+            List<Claim> userClaims = new List<Claim>()
+            {
+                new Claim(ClaimTypes.Name, user.UserName),
+                new Claim(ClaimTypes.NameIdentifier, user.Id),
+                new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                new Claim(JwtRegisteredClaimNames.Sub, user.Email),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            };
+
+            var userRoles = await _userManager.GetRolesAsync(user);
+            foreach (var role in userRoles)
+            {
+                userClaims.Add(new Claim(ClaimTypes.Role, role.ToString()));
+            }
+
+            var loginKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_configuration["JWT:Secret"]));
+
+            var token = new JwtSecurityToken(
+                issuer: _configuration["JWT:Issuer"],
+                audience: _configuration["JWT:Audience"],
+                claims: userClaims,
+                expires: DateTime.UtcNow.AddMinutes(30),
+                signingCredentials: new SigningCredentials(loginKey, SecurityAlgorithms.HmacSha256)
+                );
+
+            var jwtToken = new JwtSecurityTokenHandler().WriteToken(token);
+
+            var result = new JwtTokenViewModel
+            {
+                Token = jwtToken,
+                ExiresAt = token.ValidTo
+            };
+            return result;
+        }
+
+        // Admin Actions ---------------------------------------------------------------------------------------->
+
+        [Authorize(Roles = Roles.Admin)]
+        [HttpPost("addAdmin")]
+        public async Task<IActionResult> addAdmin([FromBody] AddAdminViewModel adminVm)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Please enter all details");
+            }
+
+            var userExists = await _userManager.FindByNameAsync(adminVm.UserName);
+            if (userExists != null)
+            {
+                return BadRequest($"Admin {userExists.UserName} already exists.");
+            }
+            User userToAdd = new User()
+            {
+                FirstName = adminVm.FirstName,
+                LastName = adminVm.LastName,
+                Email = adminVm.Email,
+                PasswordHash = adminVm.Password,
+                UserName = adminVm.UserName,
+            };
+
+            var result = await _userManager.CreateAsync(userToAdd, adminVm.Password.Cipher());
+
+            if (result.Succeeded)
+            {
+                await _userManager.AddToRoleAsync(userToAdd, Roles.Admin);
+                return Ok("Added admin.");
+            }
+            else
+                return BadRequest("Admin could not be created.");
+        }
+
+        [HttpPost("admin-login")]
+        public async Task<IActionResult> AdminLogin([FromBody] UserLoginViewModel userVm)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Please enter all details");
+            }
+            var userExists = await _userManager.FindByNameAsync(userVm.UserName);
+
+            if (userExists != null && await _userManager.CheckPasswordAsync(userExists, userVm.Password.Cipher()))
+            {
+                var tokenReturned = await GenerateJwtToken(userExists);
+                return Ok(tokenReturned);
+            }
+            else
+                return Unauthorized();
+        }
+
+        // Employee Actions ---------------------------------------------------------------------------------------->
+
+        [Authorize(Roles = Roles.Admin)]
+        [HttpPost("addEmployee")]
+        public async Task<IActionResult> addEmployee([FromBody] AddUserViewModel customerVm)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Please enter all details");
+            }
+
+            var userExists = await _userManager.FindByNameAsync(customerVm.UserName);
+            if (userExists != null)
+            {
+                return BadRequest($"Employee {userExists.UserName} already exists.");
+            }
+            User userToAdd = new User()
+            {
+                FirstName = customerVm.FirstName,
+                LastName = customerVm.LastName,
+                Email = customerVm.Email,
+                PasswordHash = customerVm.Password,
+                UserName = customerVm.UserName,
+                DoB = customerVm.DoB,
+                Age = DateTime.Now.AddYears(-customerVm.DoB.Year).Year,
+                PhoneNumber = customerVm.PhoneNumber
+            };
+
+            var result = await _userManager.CreateAsync(userToAdd, customerVm.Password.Cipher());
+
+            if (result.Succeeded)
+            {
+                await _userManager.AddToRoleAsync(userToAdd, Roles.Employee);
+                return Ok("Added Employee.");
+            }
+            else
+                return BadRequest("Employee could not be created.");
+        }
+
+        [HttpPost("employee-login")]
+        public async Task<IActionResult> EmployeeLogin([FromBody] UserLoginViewModel userVm)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Please enter all details");
+            }
+            var userExists = await _userManager.FindByNameAsync(userVm.UserName);
+
+            if (userExists != null && await _userManager.CheckPasswordAsync(userExists, userVm.Password.Cipher()))
+            {
+                var tokenReturned = await GenerateJwtToken(userExists);
+                return Ok(tokenReturned);
+            }
+            else
+                return Unauthorized();
+        }
+
+        // Agent Actions ---------------------------------------------------------------------------------------->
+
+        [Authorize(Roles = Roles.Employee)]
+        [HttpPost("addAgent")]
+        public async Task<IActionResult> addAgent([FromBody] AddUserViewModel customerVm)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Please enter all details");
+            }
+
+            var userExists = await _userManager.FindByNameAsync(customerVm.UserName);
+            if (userExists != null)
+            {
+                return BadRequest($"Agent {userExists.UserName} already exists.");
+            }
+            User userToAdd = new User()
+            {
+                FirstName = customerVm.FirstName,
+                LastName = customerVm.LastName,
+                Email = customerVm.Email,
+                PasswordHash = customerVm.Password,
+                UserName = customerVm.UserName,
+                DoB = customerVm.DoB,
+                Age = DateTime.Now.AddYears(-customerVm.DoB.Year).Year,
+                PhoneNumber = customerVm.PhoneNumber
+            };
+
+            var result = await _userManager.CreateAsync(userToAdd, customerVm.Password.Cipher());
+
+            if (result.Succeeded)
+            {
+                await _userManager.AddToRoleAsync(userToAdd, Roles.Agent);
+                return Ok("Added Agent.");
+            }
+            else
+                return BadRequest("Agent could not be created.");
+        }
+
+        [HttpPost("agent-login")]
+        public async Task<IActionResult> AgentLogin([FromBody] UserLoginViewModel userVm)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Please enter all details");
+            }
+            var userExists = await _userManager.FindByNameAsync(userVm.UserName);
+
+            if (userExists != null && await _userManager.CheckPasswordAsync(userExists, userVm.Password.Cipher()))
+            {
+                var tokenReturned = await GenerateJwtToken(userExists);
+                return Ok(tokenReturned);
+            }
+            else
+                return Unauthorized();
+        }
+
+        // Customer Actions ---------------------------------------------------------------------------------------->
+
+        [Authorize(Roles = Roles.Agent)]
+        [HttpPost("addCustomer")]
+        public async Task<IActionResult> addCustomer([FromBody] AddUserViewModel customerVm)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Please enter all details");
+            }
+
+            var userExists = await _userManager.FindByNameAsync(customerVm.UserName);
+            if (userExists != null)
+            {
+                return BadRequest($"Customer {userExists.UserName} already exists.");
+            }
+            User userToAdd = new User()
+            {
+                FirstName = customerVm.FirstName,
+                LastName = customerVm.LastName,
+                Email = customerVm.Email,
+                PasswordHash = customerVm.Password,
+                UserName = customerVm.UserName,
+                DoB = customerVm.DoB,
+                Age = DateTime.Now.AddYears(-customerVm.DoB.Year).Year,
+                PhoneNumber = customerVm.PhoneNumber
+        };
+
+            var result = await _userManager.CreateAsync(userToAdd, customerVm.Password.Cipher());
+
+            if (result.Succeeded)
+            {
+                await _userManager.AddToRoleAsync(userToAdd, Roles.Customer);
+                return Ok("Added Customer.");
+            }
+            else
+                return BadRequest("Customer could not be created.");
+        }
+
+        [HttpPost("customer-login")]
+        public async Task<IActionResult> CustomerLogin([FromBody] UserLoginViewModel userVm)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Please enter all details");
+            }
+            var userExists = await _userManager.FindByNameAsync(userVm.UserName);
+
+            if (userExists != null && await _userManager.CheckPasswordAsync(userExists, userVm.Password.Cipher()))
+            {
+                var tokenReturned = await GenerateJwtToken(userExists);
+                return Ok(tokenReturned);
+            }
+            else
+                return Unauthorized();
+        }
     }
 }

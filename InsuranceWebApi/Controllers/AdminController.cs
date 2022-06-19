@@ -2,14 +2,18 @@
 using InsuranceLib.DAL.Repositories;
 using InsuranceWebApi.ViewModels;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Web.Helpers;
+using System.IO;
+using InsuranceWebApi.Helpers;
+using Microsoft.AspNetCore.Authorization;
 namespace InsuranceWebApi.Controllers
 {
+    [Authorize(Roles = Roles.Admin)]
     [Route("api/[controller]")]
     [ApiController]
     public class AdminController : ControllerBase
@@ -21,7 +25,7 @@ namespace InsuranceWebApi.Controllers
         private readonly IRepository<InsuranceType> typesRepo;
         private readonly IRepository<Image> imagesRepo;
 
-        public AdminController(IRepository<State> statesRepo, 
+        public AdminController(IRepository<State> statesRepo,
                                IRepository<City> citiesRepo,
                                IRepository<InsuranceScheme> schemesRepo,
                                IRepository<InsurancePlan> plansRepo,
@@ -55,7 +59,7 @@ namespace InsuranceWebApi.Controllers
 
             await statesRepo.Add(new State()
             {
-                StateName = stateVm.Title,
+                StateName = stateVm.StateName,
                 IsActive = stateVm.IsActive
             });
             return Ok("State Added.");
@@ -134,6 +138,12 @@ namespace InsuranceWebApi.Controllers
             return Ok(await schemesRepo.GetById(id));
         }
 
+        [HttpGet("InsuranceScheme/getSchemes/{insuranceTypeName}")]
+        public async Task<IActionResult> GetSchemeByType(string insuranceTypeName)
+        {
+            return Ok(await schemesRepo.GetWhere(s => s.InsuranceTypeTitle == insuranceTypeName));
+        }
+
         [HttpPost("InsuranceScheme/addScheme")]
         public async Task<IActionResult> PostScheme([FromBody] AddSchemeViewModel schemeVm)
         {
@@ -189,16 +199,16 @@ namespace InsuranceWebApi.Controllers
             {
                 InsuranceTypeTitle = planVm.InsuranceTypeTitle,
                 InsuranceSchemeTitle = planVm.InsuranceSchemeTitle,
-                
+
                 InvestmentMax = planVm.InvestmentMax,
                 InvestmentMin = planVm.InvestmentMin,
-                
+
                 PolicyTermMax = planVm.PolicyTermMax,
                 PolicyTermMin = planVm.PolicyTermMin,
-               
+
                 AgeMax = planVm.AgeMax,
                 AgeMin = planVm.AgeMin,
-                
+
                 ProfitRatio = planVm.ProfitRatio,
 
                 IsActive = planVm.IsActive,
@@ -241,12 +251,37 @@ namespace InsuranceWebApi.Controllers
         public async Task<IActionResult> PostType([FromBody] AddTypeViewModel planVm)
         {
             if (!ModelState.IsValid) return BadRequest("Not a valid input.");
+            
             await typesRepo.Add(new InsuranceType()
             {
                 TypeTitle = planVm.TypeTitle,
                 IsActive = planVm.IsActive,
             });
-            return Ok("Type Added.");
+
+            if (planVm.ImageFile != null)
+            {
+                if (planVm.ImageFile.Length > 0)
+                {
+                    byte[] imageData = null;
+                    IEnumerable<InsuranceType> type = await typesRepo.GetWhere(t => t.TypeTitle == planVm.TypeTitle);
+                    using (var stream = planVm.ImageFile.OpenReadStream())
+                    {
+                        using (var memoryStream = new MemoryStream())
+                        {
+                            stream.CopyTo(memoryStream);
+                            imageData = memoryStream.ToArray();
+                        }
+                    }
+                    await imagesRepo.Add(new Image()
+                    {
+                        ImageData = imageData,
+                        ImageTitle = planVm.ImageFile.FileName,
+                        BaseEntity = type.GetEnumerator().Current
+                    });
+                    return Ok("Type Added along with the image.");
+                }
+            }
+            return Ok("Type Added with no image.");
         }
 
         [HttpPut("InsuranceType/update")]
@@ -262,6 +297,48 @@ namespace InsuranceWebApi.Controllers
         {
             await typesRepo.Remove(id);
             return Ok("Type deleted.");
+        }
+
+
+        //Image Api Endpoints---------------------------------------------------------------------------------------->
+
+        [HttpGet("Image/getImages")]
+        public async Task<IActionResult> GetImages()
+        {
+            return Ok(await imagesRepo.GetAll());
+        }
+
+        [HttpGet("Image/getType/{id}")]
+        public async Task<IActionResult> GetImageById(Guid id)
+        {
+            return Ok(await imagesRepo.GetById(id));
+        }
+
+        //[HttpPost("Image/addType")]
+        //public async Task<IActionResult> PostImage([FromBody] AddTypeViewModel planVm)
+        //{
+        //    if (!ModelState.IsValid) return BadRequest("Not a valid input.");
+        //    await imagesRepo.Add(new Image()
+        //    {
+        //        TypeTitle = planVm.TypeTitle,
+        //        IsActive = planVm.IsActive,
+        //    });
+
+        //}
+
+        [HttpPut("Image/update")]
+        public async Task<IActionResult> PutImage([FromBody] Image value)
+        {
+            if (!ModelState.IsValid) return BadRequest("Not a valid input.");
+            await imagesRepo.Update(value);
+            return Ok("Image updated.");
+        }
+
+        [HttpDelete("Image/{id}")]
+        public async Task<IActionResult> DeleteImage(Guid id)
+        {
+            await imagesRepo.Remove(id);
+            return Ok("Image deleted.");
         }
     }
 }

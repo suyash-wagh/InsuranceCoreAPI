@@ -13,7 +13,7 @@ namespace InsuranceLib.DAL.Repositories.Users
         Task<T> FirstOrDefault(Expression<Func<T, bool>> predicate);
 
         Task AddAdminAsync(T entity);
-        Task Update(string id, T entity);
+        Task Update(T entity);
         Task Remove(T entity);
 
         Task<IEnumerable<T>> GetAll();

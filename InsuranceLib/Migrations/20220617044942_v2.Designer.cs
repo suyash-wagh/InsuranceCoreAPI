@@ -4,14 +4,16 @@ using InsuranceLib.DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace InsuranceLib.DAL.Migrations
 {
     [DbContext(typeof(InsuranceDbContext))]
-    partial class InsuranceDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220617044942_v2")]
+    partial class v2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -28,9 +30,15 @@ namespace InsuranceLib.DAL.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("Discriminator")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("Id");
 
                     b.ToTable("BaseEntity");
+
+                    b.HasDiscriminator<string>("Discriminator").HasValue("BaseEntity");
                 });
 
             modelBuilder.Entity("InsuranceLib.DAL.Models.User", b =>
@@ -277,7 +285,7 @@ namespace InsuranceLib.DAL.Migrations
 
                     b.HasIndex("StateId");
 
-                    b.ToTable("City");
+                    b.HasDiscriminator().HasValue("City");
                 });
 
             modelBuilder.Entity("InsuranceLib.DAL.Models.Image", b =>
@@ -298,7 +306,7 @@ namespace InsuranceLib.DAL.Migrations
 
                     b.HasIndex("BaseEntityId1");
 
-                    b.ToTable("Image");
+                    b.HasDiscriminator().HasValue("Image");
                 });
 
             modelBuilder.Entity("InsuranceLib.DAL.Models.InsurancePlan", b =>
@@ -330,7 +338,8 @@ namespace InsuranceLib.DAL.Migrations
                         .HasColumnType("int");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .HasColumnType("bit")
+                        .HasColumnName("InsurancePlan_IsActive");
 
                     b.Property<int>("PolicyTermMax")
                         .HasColumnType("int");
@@ -345,7 +354,7 @@ namespace InsuranceLib.DAL.Migrations
 
                     b.HasIndex("InsuranceTypeId");
 
-                    b.ToTable("InsurancePlan");
+                    b.HasDiscriminator().HasValue("InsurancePlan");
                 });
 
             modelBuilder.Entity("InsuranceLib.DAL.Models.InsuranceScheme", b =>
@@ -362,15 +371,18 @@ namespace InsuranceLib.DAL.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("InsuranceSchemeTitle")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("InsuranceSchemeTitle1");
 
                     b.Property<string>("InsuranceTypeTitle")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("InsuranceScheme_InsuranceTypeTitle");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .HasColumnType("bit")
+                        .HasColumnName("InsuranceScheme_IsActive");
 
-                    b.ToTable("InsuranceScheme");
+                    b.HasDiscriminator().HasValue("InsuranceScheme");
                 });
 
             modelBuilder.Entity("InsuranceLib.DAL.Models.InsuranceType", b =>
@@ -378,12 +390,13 @@ namespace InsuranceLib.DAL.Migrations
                     b.HasBaseType("InsuranceLib.DAL.Models.BaseEntity");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .HasColumnType("bit")
+                        .HasColumnName("InsuranceType_IsActive");
 
                     b.Property<string>("TypeTitle")
                         .HasColumnType("nvarchar(max)");
 
-                    b.ToTable("InsuranceType");
+                    b.HasDiscriminator().HasValue("InsuranceType");
                 });
 
             modelBuilder.Entity("InsuranceLib.DAL.Models.State", b =>
@@ -391,12 +404,13 @@ namespace InsuranceLib.DAL.Migrations
                     b.HasBaseType("InsuranceLib.DAL.Models.BaseEntity");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .HasColumnType("bit")
+                        .HasColumnName("State_IsActive");
 
                     b.Property<string>("StateName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.ToTable("State");
+                    b.HasDiscriminator().HasValue("State");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -452,12 +466,6 @@ namespace InsuranceLib.DAL.Migrations
 
             modelBuilder.Entity("InsuranceLib.DAL.Models.City", b =>
                 {
-                    b.HasOne("InsuranceLib.DAL.Models.BaseEntity", null)
-                        .WithOne()
-                        .HasForeignKey("InsuranceLib.DAL.Models.City", "Id")
-                        .OnDelete(DeleteBehavior.ClientCascade)
-                        .IsRequired();
-
                     b.HasOne("InsuranceLib.DAL.Models.State", "State")
                         .WithMany()
                         .HasForeignKey("StateId");
@@ -471,23 +479,11 @@ namespace InsuranceLib.DAL.Migrations
                         .WithMany()
                         .HasForeignKey("BaseEntityId1");
 
-                    b.HasOne("InsuranceLib.DAL.Models.BaseEntity", null)
-                        .WithOne()
-                        .HasForeignKey("InsuranceLib.DAL.Models.Image", "Id")
-                        .OnDelete(DeleteBehavior.ClientCascade)
-                        .IsRequired();
-
                     b.Navigation("BaseEntity");
                 });
 
             modelBuilder.Entity("InsuranceLib.DAL.Models.InsurancePlan", b =>
                 {
-                    b.HasOne("InsuranceLib.DAL.Models.BaseEntity", null)
-                        .WithOne()
-                        .HasForeignKey("InsuranceLib.DAL.Models.InsurancePlan", "Id")
-                        .OnDelete(DeleteBehavior.ClientCascade)
-                        .IsRequired();
-
                     b.HasOne("InsuranceLib.DAL.Models.InsuranceScheme", "InsuranceScheme")
                         .WithMany()
                         .HasForeignKey("InsuranceSchemeId");
@@ -499,33 +495,6 @@ namespace InsuranceLib.DAL.Migrations
                     b.Navigation("InsuranceScheme");
 
                     b.Navigation("InsuranceType");
-                });
-
-            modelBuilder.Entity("InsuranceLib.DAL.Models.InsuranceScheme", b =>
-                {
-                    b.HasOne("InsuranceLib.DAL.Models.BaseEntity", null)
-                        .WithOne()
-                        .HasForeignKey("InsuranceLib.DAL.Models.InsuranceScheme", "Id")
-                        .OnDelete(DeleteBehavior.ClientCascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("InsuranceLib.DAL.Models.InsuranceType", b =>
-                {
-                    b.HasOne("InsuranceLib.DAL.Models.BaseEntity", null)
-                        .WithOne()
-                        .HasForeignKey("InsuranceLib.DAL.Models.InsuranceType", "Id")
-                        .OnDelete(DeleteBehavior.ClientCascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("InsuranceLib.DAL.Models.State", b =>
-                {
-                    b.HasOne("InsuranceLib.DAL.Models.BaseEntity", null)
-                        .WithOne()
-                        .HasForeignKey("InsuranceLib.DAL.Models.State", "Id")
-                        .OnDelete(DeleteBehavior.ClientCascade)
-                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

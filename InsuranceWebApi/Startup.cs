@@ -19,6 +19,7 @@ using InsuranceLib.BL.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using InsuranceLib.DAL.Repositories.Users;
 using InsuranceLib.DAL.Repositories;
+using InsuranceWebApi.Helpers;
 
 namespace InsuranceWebApi
 {
@@ -65,8 +66,9 @@ namespace InsuranceWebApi
             
             services.AddTransient<IUsersRepository<User>, UsersRepository>();
 
+            //services.AddSingleton(tokenValidationParameters);
+
             services.AddScoped(typeof(IRepository<>), typeof(RepositoryBase<>));
-            //services.AddScoped<IRepository<State>, RepositoryBase<State>>();
 
             services.AddIdentity<User, IdentityRole>()
              .AddEntityFrameworkStores<InsuranceDbContext>()
@@ -104,12 +106,16 @@ namespace InsuranceWebApi
 
             app.UseSwaggerUI();
 
+            app.UseAuthentication();
+
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
             });
+
+            RolesInitializer.AddRolesToDataBase(app).Wait();
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Http;
+using System.ComponentModel.DataAnnotations;
 
 namespace InsuranceWebApi.ViewModels
 {
@@ -6,6 +7,7 @@ namespace InsuranceWebApi.ViewModels
     {
         [Required(ErrorMessage ="Type name is required.")]
         public string TypeTitle { get; set; }
+        public IFormFile ImageFile { get; set; }
         public bool IsActive { get; set; }
     }
 }

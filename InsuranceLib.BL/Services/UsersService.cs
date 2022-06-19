@@ -47,9 +47,9 @@ namespace InsuranceLib.BL.Services
             await repo.Remove(entity);
         }
 
-        public async Task Update(string id, User entity)
+        public async Task Update(User entity)
         {
-            await repo.Update(id, entity);
+            await repo.Update(entity);
         }
     }
 }

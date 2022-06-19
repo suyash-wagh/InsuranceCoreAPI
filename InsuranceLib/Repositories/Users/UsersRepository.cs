@@ -14,10 +14,14 @@ namespace InsuranceLib.DAL.Repositories.Users
     public class UsersRepository : IUsersRepository<User>
     {
         private readonly InsuranceDbContext context;
+        private readonly UserManager<User> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
 
-        public UsersRepository(InsuranceDbContext context)
+        public UsersRepository(InsuranceDbContext context, UserManager<User> userManager, RoleManager<IdentityRole> roleManager)
         {
             this.context = context;
+            this._userManager = userManager;
+            this._roleManager = roleManager;
         }
 
         public async Task AddAdminAsync(User entity)
@@ -72,14 +76,15 @@ namespace InsuranceLib.DAL.Repositories.Users
 
         }
 
-        public async Task Update(string id, User entity)
+        public async Task Update(User entity)
         {
-            User user = await context.Set<User>().FindAsync(id);
-            user.FirstName = entity.FirstName;
-            user.LastName = entity.LastName;
-            user.Email = entity.Email;
-            user.PasswordHash = entity.PasswordHash.Cipher();
-            //context.Entry(entity).State = EntityState.Modified;
+            User existing = context.Set<User>().Where(e => e.Id == entity.Id).AsNoTracking().FirstOrDefault<User>();
+            if (existing != null)
+            {
+                existing = entity;
+                context.Set<User>().Update(existing);
+            }
+            context.Entry(existing).State = EntityState.Modified;
             await context.SaveChangesAsync();
         }
     }
