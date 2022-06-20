@@ -18,6 +18,7 @@ namespace InsuranceLib.DAL.Repositories.Users
 
         Task<IEnumerable<T>> GetAll();
         Task<IEnumerable<T>> GetWhere(Expression<Func<T, bool>> predicate);
+        Task<IEnumerable<User>> GetUsersByRoles(string role);
 
         Task<int> CountAll();
         Task<int> CountWhere(Expression<Func<T, bool>> predicate);

@@ -78,14 +78,36 @@ namespace InsuranceLib.DAL.Repositories.Users
 
         public async Task Update(User entity)
         {
-            User existing = context.Set<User>().Where(e => e.Id == entity.Id).AsNoTracking().FirstOrDefault<User>();
+            User existing = context.Users.Where(e => e.Id == entity.Id).AsNoTracking().FirstOrDefault();
             if (existing != null)
             {
-                existing = entity;
+                existing.FirstName = entity.FirstName;
+                existing.LastName = entity.LastName;
+                existing.Email = entity.Email;
+                existing.DoB = entity.DoB;
+                existing.Address = entity.Address;
+                existing.City = entity.City;
+                existing.State = entity.State;
+                existing.Nominee = entity.Nominee;
+                existing.NomineeRelation = existing.NomineeRelation;
+                existing.PhoneNumber = existing.PhoneNumber;
+                existing.Pincode = existing.Pincode;
                 context.Set<User>().Update(existing);
             }
-            context.Entry(existing).State = EntityState.Modified;
+            //context.Entry(existing).State = EntityState.Modified;
             await context.SaveChangesAsync();
+        }
+
+        public async Task<IEnumerable<User>> GetUsersByRoles(string role)
+        {
+            var userRole = await _roleManager.FindByNameAsync(role);
+            var userIds = context.UserRoles.Where(ur => ur.RoleId == userRole.Id).Select(ur => ur.UserId).ToList();
+            var users = new List<User>();
+            foreach(var userId in userIds)
+            {
+                users.Add(await context.Users.FindAsync(userId));
+            }
+            return users;
         }
     }
 }

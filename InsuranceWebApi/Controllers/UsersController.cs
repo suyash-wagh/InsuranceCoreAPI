@@ -61,26 +61,27 @@ namespace InsuranceWebApi.Controllers
                 Email = userVm.Email,
                 PasswordHash = userVm.Password
             };
-            await service.Update(user);
+            //await service.Update(user);
             return Ok("User updated.");
         }
 
-        [HttpPut("update-user/{id}")]
-        public async Task<IActionResult> UpdateUser([FromBody] AddUserViewModel userVm)
+        [HttpPut("update-user")]
+        public IActionResult UpdateUser([FromBody] User userVm)
         {
-            User user = new User()
-            {
-                FirstName = userVm.FirstName,
-                LastName = userVm.LastName,
-                Email = userVm.Email,
-                PasswordHash = userVm.Password,
-                UserName = userVm.UserName,
-                DoB = userVm.DoB,
-                Age = DateTime.Now.AddYears(-userVm.DoB.Year).Year,
-                PhoneNumber = userVm.PhoneNumber
+            //User user = new User()
+            //{
+            //    Id = userVm.Id,
+            //    FirstName = userVm.FirstName,
+            //    LastName = userVm.LastName,
+            //    Email = userVm.Email,
+            //    PasswordHash = userVm.Password,
+            //    UserName = userVm.UserName,
+            //    DoB = userVm.DoB,
+            //    Age = DateTime.Now.AddYears(-userVm.DoB.Year).Year,
+            //    PhoneNumber = userVm.PhoneNumber
 
-            };
-            await service.Update(user);
+            //};
+            service.Update(userVm);
             return Ok("User updated.");
         }
 
@@ -93,7 +94,11 @@ namespace InsuranceWebApi.Controllers
             return Ok("User deleted");
         }
 
-
+        [HttpGet("getUsersByRoles/{role}")]
+        public async Task<IActionResult> GetUsersByRoles(string role)
+        {
+            return Ok(await service.GetUsersByroles(role));
+        }
         //JWT Token---------------------------------------------------------------------------------------------------->
 
 

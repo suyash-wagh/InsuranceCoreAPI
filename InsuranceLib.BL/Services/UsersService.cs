@@ -51,5 +51,10 @@ namespace InsuranceLib.BL.Services
         {
             await repo.Update(entity);
         }
+
+        public async Task<IEnumerable<User>> GetUsersByroles(string role)
+        {
+            return await repo.GetUsersByRoles(role);
+        }
     }
 }

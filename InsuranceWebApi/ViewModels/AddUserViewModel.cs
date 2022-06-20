@@ -5,6 +5,7 @@ namespace InsuranceWebApi.ViewModels
 {
     public class AddUserViewModel
     {
+        public string Id { get; set; }
         [Required(ErrorMessage = "First name is required.")]
         public string FirstName { get; set; }
 
