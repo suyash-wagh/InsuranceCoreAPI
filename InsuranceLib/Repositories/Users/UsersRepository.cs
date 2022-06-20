@@ -82,6 +82,7 @@ namespace InsuranceLib.DAL.Repositories.Users
             if (existing != null)
             {
                 existing.FirstName = entity.FirstName;
+                existing.UserName = entity.UserName;
                 existing.LastName = entity.LastName;
                 existing.Email = entity.Email;
                 existing.DoB = entity.DoB;
@@ -94,7 +95,7 @@ namespace InsuranceLib.DAL.Repositories.Users
                 existing.Pincode = existing.Pincode;
                 context.Set<User>().Update(existing);
             }
-            //context.Entry(existing).State = EntityState.Modified;
+            context.Entry(existing).State = EntityState.Modified;
             await context.SaveChangesAsync();
         }
 
