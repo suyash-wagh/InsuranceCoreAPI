@@ -28,5 +28,11 @@ namespace InsuranceWebApi.ViewModels
         [RegularExpression("^\\s*(?:\\+?(\\d{1,3}))?[-. (]*(\\d{3})[-. )]*(\\d{3})[-. ]*(\\d{4})(?: *x(\\d+))?\\s*$", 
             ErrorMessage = "Please enter correct Phone number.")]
         public string PhoneNumber { get; set; }
+        public string Address { get; set; }
+        public string City { get; set; }
+        public string State { get; set; }
+        public int Pincode { get; set; }
+        public string Nominee { get; set; }
+        public string NomineeRelation { get; set; }
     }
 }

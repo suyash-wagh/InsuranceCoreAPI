@@ -51,37 +51,18 @@ namespace InsuranceWebApi.Controllers
         }
 
         [Authorize(Roles = Roles.Admin)]
-        [HttpPut("update-admin/{id}")]
-        public async Task<IActionResult> UpdateAdmin([FromBody] AddAdminViewModel userVm)
+        [HttpPut("update-admin")]
+        public async Task<IActionResult> UpdateAdmin([FromBody] User userVm)
         {
-            User user = new User()
-            {
-                FirstName = userVm.FirstName,
-                LastName = userVm.LastName,
-                Email = userVm.Email,
-                PasswordHash = userVm.Password
-            };
-            //await service.Update(user);
+            await service.Update(userVm);
             return Ok("User updated.");
         }
 
+        [Authorize(Roles = Roles.Admin)]
         [HttpPut("update-user")]
-        public IActionResult UpdateUser([FromBody] User userVm)
+        public async Task<IActionResult> UpdateUser([FromBody] User userVm)
         {
-            //User user = new User()
-            //{
-            //    Id = userVm.Id,
-            //    FirstName = userVm.FirstName,
-            //    LastName = userVm.LastName,
-            //    Email = userVm.Email,
-            //    PasswordHash = userVm.Password,
-            //    UserName = userVm.UserName,
-            //    DoB = userVm.DoB,
-            //    Age = DateTime.Now.AddYears(-userVm.DoB.Year).Year,
-            //    PhoneNumber = userVm.PhoneNumber
-
-            //};
-            service.Update(userVm);
+            await service.Update(userVm);
             return Ok("User updated.");
         }
 
@@ -141,7 +122,7 @@ namespace InsuranceWebApi.Controllers
 
         // Admin Actions ---------------------------------------------------------------------------------------->
 
-        [Authorize(Roles = Roles.Admin)]
+        //[Authorize(Roles = Roles.Admin)]
         [HttpPost("addAdmin")]
         public async Task<IActionResult> addAdmin([FromBody] AddAdminViewModel adminVm)
         {
@@ -252,7 +233,7 @@ namespace InsuranceWebApi.Controllers
 
         // Agent Actions ---------------------------------------------------------------------------------------->
 
-        [Authorize(Roles = Roles.Employee)]
+        [Authorize(Roles = Roles.Admin)]
         [HttpPost("addAgent")]
         public async Task<IActionResult> addAgent([FromBody] AddUserViewModel customerVm)
         {
@@ -332,7 +313,12 @@ namespace InsuranceWebApi.Controllers
                 UserName = customerVm.UserName,
                 DoB = customerVm.DoB,
                 Age = DateTime.Now.AddYears(-customerVm.DoB.Year).Year,
-                PhoneNumber = customerVm.PhoneNumber
+                PhoneNumber = customerVm.PhoneNumber,
+                Nominee = customerVm.Nominee,
+                NomineeRelation = customerVm.NomineeRelation,
+                City = customerVm.City,
+                State = customerVm.State,
+                Address = customerVm.Address
         };
 
             var result = await _userManager.CreateAsync(userToAdd, customerVm.Password.Cipher());
