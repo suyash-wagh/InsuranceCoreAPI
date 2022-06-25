@@ -37,7 +37,7 @@ namespace InsuranceWebApi.Controllers
             this._configuration = configuration;
         }
 
-        [Authorize(Roles = Roles.Admin)]
+        //[Authorize(Roles = Roles.Admin)]
         [HttpGet("")]
         public async Task<IActionResult> GetAllUsers()
         {
@@ -58,7 +58,7 @@ namespace InsuranceWebApi.Controllers
             return Ok("User updated.");
         }
 
-        [Authorize(Roles = Roles.Admin)]
+        [Authorize(Roles = Roles.Agent + "," + Roles.Admin + "," + Roles.Employee)]
         [HttpPut("update-user")]
         public async Task<IActionResult> UpdateUser([FromBody] User userVm)
         {
@@ -159,6 +159,15 @@ namespace InsuranceWebApi.Controllers
         [HttpPost("admin-login")]
         public async Task<IActionResult> AdminLogin([FromBody] UserLoginViewModel userVm)
         {
+            var userAvailable = await _userManager.FindByNameAsync(userVm.UserName);
+            var userRole = service.GetRoleIdByUserID(r => r.UserId == userAvailable.Id);
+            var adminRoleId = service.GetRoleIdWhere(r => r.Name == Roles.Admin);
+
+            if (userRole != adminRoleId)
+            {
+                return Unauthorized("Only admins can login.");
+            }
+
             if (!ModelState.IsValid)
             {
                 return BadRequest("Please enter all details");
@@ -199,7 +208,8 @@ namespace InsuranceWebApi.Controllers
                 UserName = customerVm.UserName,
                 DoB = customerVm.DoB,
                 Age = DateTime.Now.AddYears(-customerVm.DoB.Year).Year,
-                PhoneNumber = customerVm.PhoneNumber
+                PhoneNumber = customerVm.PhoneNumber,
+                ParentId = customerVm.ParentId
             };
 
             var result = await _userManager.CreateAsync(userToAdd, customerVm.Password.Cipher());
@@ -216,6 +226,15 @@ namespace InsuranceWebApi.Controllers
         [HttpPost("employee-login")]
         public async Task<IActionResult> EmployeeLogin([FromBody] UserLoginViewModel userVm)
         {
+            var userAvailable = await _userManager.FindByNameAsync(userVm.UserName);
+            var userRole = service.GetRoleIdByUserID(r => r.UserId == userAvailable.Id);
+            var empId = service.GetRoleIdWhere(r => r.Name == Roles.Employee);
+
+            if (userRole != empId)
+            {
+                return Unauthorized("Only employees can login.");
+            }
+
             if (!ModelState.IsValid)
             {
                 return BadRequest("Please enter all details");
@@ -233,7 +252,7 @@ namespace InsuranceWebApi.Controllers
 
         // Agent Actions ---------------------------------------------------------------------------------------->
 
-        [Authorize(Roles = Roles.Admin)]
+        [Authorize(Roles = Roles.Admin+","+Roles.Employee)]
         [HttpPost("addAgent")]
         public async Task<IActionResult> addAgent([FromBody] AddUserViewModel customerVm)
         {
@@ -256,7 +275,8 @@ namespace InsuranceWebApi.Controllers
                 UserName = customerVm.UserName,
                 DoB = customerVm.DoB,
                 Age = DateTime.Now.AddYears(-customerVm.DoB.Year).Year,
-                PhoneNumber = customerVm.PhoneNumber
+                PhoneNumber = customerVm.PhoneNumber,
+                ParentId = customerVm.ParentId
             };
 
             var result = await _userManager.CreateAsync(userToAdd, customerVm.Password.Cipher());
@@ -273,6 +293,15 @@ namespace InsuranceWebApi.Controllers
         [HttpPost("agent-login")]
         public async Task<IActionResult> AgentLogin([FromBody] UserLoginViewModel userVm)
         {
+            var userAvailable = await _userManager.FindByNameAsync(userVm.UserName);
+            var userRole = service.GetRoleIdByUserID(r => r.UserId == userAvailable.Id);
+            var empId = service.GetRoleIdWhere(r => r.Name == Roles.Agent);
+
+            if (userRole != empId)
+            {
+                return Unauthorized("Only agents can login.");
+            }
+
             if (!ModelState.IsValid)
             {
                 return BadRequest("Please enter all details");
@@ -290,7 +319,7 @@ namespace InsuranceWebApi.Controllers
 
         // Customer Actions ---------------------------------------------------------------------------------------->
 
-        [Authorize(Roles = Roles.Agent)]
+        //[Authorize(Roles = Roles.Agent + "," + Roles.Admin + "," + Roles.Employee)]
         [HttpPost("addCustomer")]
         public async Task<IActionResult> addCustomer([FromBody] AddUserViewModel customerVm)
         {
@@ -318,8 +347,9 @@ namespace InsuranceWebApi.Controllers
                 NomineeRelation = customerVm.NomineeRelation,
                 City = customerVm.City,
                 State = customerVm.State,
-                Address = customerVm.Address
-        };
+                Address = customerVm.Address,
+                ParentId = customerVm.ParentId
+            };
 
             var result = await _userManager.CreateAsync(userToAdd, customerVm.Password.Cipher());
 
@@ -335,6 +365,15 @@ namespace InsuranceWebApi.Controllers
         [HttpPost("customer-login")]
         public async Task<IActionResult> CustomerLogin([FromBody] UserLoginViewModel userVm)
         {
+            var userAvailable = await _userManager.FindByNameAsync(userVm.UserName);
+            var userRole = service.GetRoleIdByUserID(r => r.UserId == userAvailable.Id);
+            var empId = service.GetRoleIdWhere(r => r.Name == Roles.Customer);
+
+            if (userRole != empId)
+            {
+                return Unauthorized("Only customers can login.");
+            }
+
             if (!ModelState.IsValid)
             {
                 return BadRequest("Please enter all details");

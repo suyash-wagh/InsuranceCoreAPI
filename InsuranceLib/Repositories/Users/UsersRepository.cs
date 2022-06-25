@@ -93,7 +93,10 @@ namespace InsuranceLib.DAL.Repositories.Users
                 existing.NomineeRelation = existing.NomineeRelation;
                 existing.PhoneNumber = existing.PhoneNumber;
                 existing.Pincode = existing.Pincode;
-                existing.PasswordHash = entity.PasswordHash;
+                if(existing.PasswordHash != null)
+                {
+                    existing.PasswordHash = entity.PasswordHash;
+                }
                 context.Set<User>().Update(existing);
             }
             context.Entry(existing).State = EntityState.Modified;
@@ -110,6 +113,16 @@ namespace InsuranceLib.DAL.Repositories.Users
                 users.Add(await context.Users.FindAsync(userId));
             }
             return users;
+        }
+
+        public string GetRoleIdByUserID(Expression<Func<IdentityUserRole<string>, bool>> predicate)
+        {
+            return context.UserRoles.Where(predicate).Select(r => r.RoleId).SingleOrDefault();
+        }
+
+        public string GetRoleIdWhere(Expression<Func<IdentityRole<string>, bool>> predicate)
+        {
+            return context.Roles.Where(predicate).Select(r => r.Id).SingleOrDefault();
         }
     }
 }

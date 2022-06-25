@@ -13,7 +13,7 @@ using InsuranceWebApi.Helpers;
 using Microsoft.AspNetCore.Authorization;
 namespace InsuranceWebApi.Controllers
 {
-    [Authorize(Roles = Roles.Admin)]
+   // [Authorize(Roles = Roles.Admin)]
     [Route("api/[controller]")]
     [ApiController]
     public class AdminController : ControllerBase
@@ -125,7 +125,7 @@ namespace InsuranceWebApi.Controllers
 
 
         //Insurance Scheme Api Endpoints---------------------------------------------------------------------------------------->
-
+        [AllowAnonymous]
         [HttpGet("InsuranceScheme/getSchemes")]
         public async Task<IActionResult> GetSchemes()
         {
@@ -234,7 +234,7 @@ namespace InsuranceWebApi.Controllers
 
 
         //Insurance Types Api Endpoints---------------------------------------------------------------------------------------->
-
+        [AllowAnonymous]
         [HttpGet("InsuranceType/getTypes")]
         public async Task<IActionResult> GetTypes()
         {

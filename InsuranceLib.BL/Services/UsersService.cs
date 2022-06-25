@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using InsuranceLib.DAL.Models;
 using InsuranceLib.DAL.Repositories.Users;
+using Microsoft.AspNetCore.Identity;
 
 namespace InsuranceLib.BL.Services
 {
@@ -55,6 +56,16 @@ namespace InsuranceLib.BL.Services
         public async Task<IEnumerable<User>> GetUsersByroles(string role)
         {
             return await repo.GetUsersByRoles(role);
+        }
+
+        public string GetRoleIdByUserID(Expression<Func<IdentityUserRole<string>, bool>> predicate)
+        {
+            return repo.GetRoleIdByUserID(predicate);
+        }
+
+        public string GetRoleIdWhere(Expression<Func<IdentityRole<string>, bool>> predicate)
+        {
+            return repo.GetRoleIdWhere(predicate);
         }
     }
 }
