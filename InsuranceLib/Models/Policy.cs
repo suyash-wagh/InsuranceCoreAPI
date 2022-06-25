@@ -6,7 +6,7 @@ namespace InsuranceLib.DAL.Models
 {
     public class Policy : BaseEntity
     {
-        public int AccountNumber { get; set; }
+        public Guid AccountId { get; set; }
         public string InsuranceTypeTitle { get; set; }
         public string InsuranceSchemeTitle { get; set; }
         public DateTime MaturityDate { get; set; }

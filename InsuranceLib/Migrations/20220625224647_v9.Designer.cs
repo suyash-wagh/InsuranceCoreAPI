@@ -4,14 +4,16 @@ using InsuranceLib.DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace InsuranceLib.DAL.Migrations
 {
     [DbContext(typeof(InsuranceDbContext))]
-    partial class InsuranceDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220625224647_v9")]
+    partial class v9
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

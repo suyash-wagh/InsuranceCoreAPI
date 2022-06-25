@@ -2,6 +2,7 @@
 using InsuranceLib.DAL;
 using InsuranceLib.DAL.Helpers;
 using InsuranceLib.DAL.Models;
+using InsuranceLib.DAL.Repositories;
 using InsuranceWebApi.Helpers;
 using InsuranceWebApi.ViewModels;
 using Microsoft.AspNetCore.Authorization;
@@ -27,13 +28,19 @@ namespace InsuranceWebApi.Controllers
         private UsersService service;
         private readonly UserManager<User> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly IRepository<InsuranceAccount> accountsRepo;
         private readonly IConfiguration _configuration;
 
-        public UsersController(UsersService service, IConfiguration configuration, UserManager<User> userManager, RoleManager<IdentityRole> roleManager)
+        public UsersController(UsersService service, 
+                               IConfiguration configuration, 
+                               UserManager<User> userManager, 
+                               RoleManager<IdentityRole> roleManager,
+                               IRepository<InsuranceAccount> accountsRepo)
         {
             this.service = service;
             this._userManager = userManager;
             this._roleManager = roleManager;
+            this.accountsRepo = accountsRepo;
             this._configuration = configuration;
         }
 
@@ -333,6 +340,7 @@ namespace InsuranceWebApi.Controllers
             {
                 return BadRequest($"Customer {userExists.UserName} already exists.");
             }
+
             User userToAdd = new User()
             {
                 FirstName = customerVm.FirstName,
@@ -356,6 +364,11 @@ namespace InsuranceWebApi.Controllers
             if (result.Succeeded)
             {
                 await _userManager.AddToRoleAsync(userToAdd, Roles.Customer);
+                await accountsRepo.Add(new InsuranceAccount()
+                {
+                    Customer = await _userManager.FindByNameAsync(customerVm.UserName),
+                    Agent = await _userManager.FindByIdAsync(customerVm.ParentId)
+                });
                 return Ok("Added Customer.");
             }
             else

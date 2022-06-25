@@ -17,6 +17,6 @@ namespace InsuranceLib.DAL.Models
         public string State { get; set; }
         public string City { get; set; }
         public int Age { get; set; }
-        public Guid ParentId { get; set; }
+        public string ParentId { get; set; }
     }
 }

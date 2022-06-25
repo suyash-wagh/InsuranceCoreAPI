@@ -4,14 +4,16 @@ using InsuranceLib.DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace InsuranceLib.DAL.Migrations
 {
     [DbContext(typeof(InsuranceDbContext))]
-    partial class InsuranceDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220625171447_v7")]
+    partial class v7
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -90,8 +92,8 @@ namespace InsuranceLib.DAL.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
-                    b.Property<string>("ParentId")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<Guid>("ParentId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("PasswordHash")
                         .HasColumnType("nvarchar(max)");
@@ -308,6 +310,9 @@ namespace InsuranceLib.DAL.Migrations
                 {
                     b.HasBaseType("InsuranceLib.DAL.Models.BaseEntity");
 
+                    b.Property<int>("AccountNumber")
+                        .HasColumnType("int");
+
                     b.Property<string>("AgentId")
                         .HasColumnType("nvarchar(450)");
 
@@ -410,7 +415,7 @@ namespace InsuranceLib.DAL.Migrations
                 {
                     b.HasBaseType("InsuranceLib.DAL.Models.BaseEntity");
 
-                    b.Property<Guid>("AccountId")
+                    b.Property<Guid?>("AccountId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<double>("AgentCommission")
@@ -436,6 +441,8 @@ namespace InsuranceLib.DAL.Migrations
 
                     b.Property<double>("TotalPremiumAmount")
                         .HasColumnType("float");
+
+                    b.HasIndex("AccountId");
 
                     b.ToTable("Policy");
                 });
@@ -596,11 +603,17 @@ namespace InsuranceLib.DAL.Migrations
 
             modelBuilder.Entity("InsuranceLib.DAL.Models.Policy", b =>
                 {
+                    b.HasOne("InsuranceLib.DAL.Models.InsuranceAccount", "Account")
+                        .WithMany()
+                        .HasForeignKey("AccountId");
+
                     b.HasOne("InsuranceLib.DAL.Models.BaseEntity", null)
                         .WithOne()
                         .HasForeignKey("InsuranceLib.DAL.Models.Policy", "Id")
                         .OnDelete(DeleteBehavior.ClientCascade)
                         .IsRequired();
+
+                    b.Navigation("Account");
                 });
 
             modelBuilder.Entity("InsuranceLib.DAL.Models.State", b =>

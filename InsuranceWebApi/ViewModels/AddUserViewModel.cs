@@ -33,6 +33,6 @@ namespace InsuranceWebApi.ViewModels
         public int Pincode { get; set; }
         public string Nominee { get; set; }
         public string NomineeRelation { get; set; }
-        public Guid ParentId { get; set; }
+        public string ParentId { get; set; }
     }
 }
