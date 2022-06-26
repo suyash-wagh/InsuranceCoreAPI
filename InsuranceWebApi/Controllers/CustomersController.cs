@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace InsuranceWebApi.Controllers
@@ -53,7 +55,7 @@ namespace InsuranceWebApi.Controllers
             if (!ModelState.IsValid) return BadRequest("Not a valid input.");
             InsurancePlan planHere = await plansRepo.FirstOrDefault(p => p.InsuranceSchemeTitle == policyVm.InsuranceSchemeTitle);
             InsuranceScheme schemeHere = await schemesRepo.FirstOrDefault(p => p.InsuranceSchemeTitle == policyVm.InsuranceSchemeTitle);
-            InsuranceAccount accountHere = await accountsRepo.FirstOrDefault(a => a.Customer.Id == policyVm.CustomerId);
+            InsuranceAccount accountHere = await accountsRepo.FirstOrDefault(a => a.CustomerId == policyVm.CustomerId);
             if (policyVm.TotalPremiumAmount > planHere.InvestmentMax || policyVm.TotalPremiumAmount < planHere.InvestmentMin)
             {
                 return BadRequest("Investment amount is not valid");
@@ -72,6 +74,16 @@ namespace InsuranceWebApi.Controllers
                 AgentCommission = policyVm.TotalPremiumAmount * schemeHere.CommissionNewRegistration / 100
             });
             return Ok("Policy Added.");
+        }
+
+        [HttpGet("getAccountByCustomerId/{customerId}")]
+        public async Task<IActionResult> GetAccountByCustomerId(string customerId)
+        {
+            var accounts = await accountsRepo.GetWhere(a => a.CustomerId == customerId);
+            var account = Enumerable.ToList(accounts)[0];
+            var policies = await policyRepo.GetWhere(p => p.AccountId == account.Id);
+            account.Policies = (List<Policy>)policies;
+            return Ok(account);
         }
     }
 }

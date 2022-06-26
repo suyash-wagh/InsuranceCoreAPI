@@ -192,6 +192,12 @@ namespace InsuranceWebApi.Controllers
             return Ok(await plansRepo.GetById(id));
         }
 
+        [HttpGet("InsurancePlan/getPlans/{insuranceSchemeName}")]
+        public async Task<IActionResult> GetPlanByScheme(string insuranceSchemeName)
+        {
+            return Ok(await plansRepo.GetWhere(s => s.InsuranceSchemeTitle == insuranceSchemeName));
+        }
+
         [HttpPost("InsurancePlan/addPlan")]
         public async Task<IActionResult> PostPlan([FromBody] AddPlanViewModel planVm)
         {
@@ -233,8 +239,8 @@ namespace InsuranceWebApi.Controllers
             return Ok("Plan deleted.");
         }
 
-
         //Insurance Types Api Endpoints---------------------------------------------------------------------------------------->
+
         [AllowAnonymous]
         [HttpGet("InsuranceType/getTypes")]
         public async Task<IActionResult> GetTypes()

@@ -7,9 +7,9 @@ namespace InsuranceLib.DAL.Models
 {
     public class InsuranceAccount : BaseEntity
     {
-        public User Customer { get; set; }
+        public string CustomerId { get; set; }
 
-        public User Agent { get; set; }
+        public string AgentId { get; set; }
 
         [NotMapped]
         public List<Policy> Policies { get; set; }

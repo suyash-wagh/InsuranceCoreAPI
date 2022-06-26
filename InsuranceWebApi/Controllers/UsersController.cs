@@ -370,10 +370,11 @@ namespace InsuranceWebApi.Controllers
             if (result.Succeeded)
             {
                 await _userManager.AddToRoleAsync(userToAdd, Roles.Customer);
+                var thisUser = await _userManager.FindByNameAsync(customerVm.UserName);
                 await accountsRepo.Add(new InsuranceAccount()
                 {
-                    Customer = await _userManager.FindByNameAsync(customerVm.UserName),
-                    Agent = await _userManager.FindByIdAsync(customerVm.ParentId)
+                    CustomerId = thisUser.Id,
+                    AgentId = customerVm.ParentId
                 });
                 return Ok("Added Customer.");
             }
