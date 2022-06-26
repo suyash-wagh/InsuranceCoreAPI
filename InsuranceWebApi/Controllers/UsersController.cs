@@ -87,6 +87,12 @@ namespace InsuranceWebApi.Controllers
         {
             return Ok(await service.GetUsersByroles(role));
         }
+
+        [HttpGet("getUsersByParentId/{parentId}")]
+        public async Task<IActionResult> GetUsersByParentId(string parentId)
+        {
+            return Ok(await service.GetUsersByParentId(parentId));
+        }
         //JWT Token---------------------------------------------------------------------------------------------------->
 
 

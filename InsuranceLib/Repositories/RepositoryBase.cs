@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
@@ -19,7 +20,8 @@ namespace InsuranceLib.DAL.Repositories
             this.Context = repositoryContext;
         }
         public Task<T> GetById(Guid id)
-        {
+        { 
+            Debug.WriteLine(Context.Set<T>().FindAsync(id).AsTask());
             return Context.Set<T>().FindAsync(id).AsTask();
         }
 

@@ -60,8 +60,8 @@ namespace InsuranceWebApi
                 });
             });
 
-            services.AddDbContext<InsuranceDbContext>(options => options.UseSqlServer(ConnectionString));
-            
+            services.AddDbContext<InsuranceDbContext>(options => options.UseSqlServer(ConnectionString), ServiceLifetime.Transient);
+
             services.AddScoped<UsersService>();
             
             services.AddTransient<IUsersRepository<User>, UsersRepository>();

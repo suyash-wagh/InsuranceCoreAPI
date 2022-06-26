@@ -131,11 +131,12 @@ namespace InsuranceWebApi.Controllers
         {
             return Ok(await schemesRepo.GetAll());
         }
-
+            
+        [AllowAnonymous]
         [HttpGet("InsuranceScheme/getScheme/{id}")]
         public async Task<IActionResult> GetSchemeById(Guid id)
         {
-            return Ok(await schemesRepo.GetById(id));
+            return Ok(await schemesRepo.FirstOrDefault(s => s.Id == id));
         }
 
         [HttpGet("InsuranceScheme/getSchemes/{insuranceTypeName}")]

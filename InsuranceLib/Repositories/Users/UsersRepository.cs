@@ -115,6 +115,10 @@ namespace InsuranceLib.DAL.Repositories.Users
             return users;
         }
 
+        public async Task<IEnumerable<User>> GetUsersByParentId(string parentId)
+        {
+            return context.Users.Where(u => u.ParentId == parentId).ToList();
+        }
         public string GetRoleIdByUserID(Expression<Func<IdentityUserRole<string>, bool>> predicate)
         {
             return context.UserRoles.Where(predicate).Select(r => r.RoleId).SingleOrDefault();

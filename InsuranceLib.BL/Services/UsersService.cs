@@ -57,6 +57,10 @@ namespace InsuranceLib.BL.Services
         {
             return await repo.GetUsersByRoles(role);
         }
+        public async Task<IEnumerable<User>> GetUsersByParentId(string parentId)
+        {
+            return await repo.GetUsersByParentId(parentId);
+        }
 
         public string GetRoleIdByUserID(Expression<Func<IdentityUserRole<string>, bool>> predicate)
         {

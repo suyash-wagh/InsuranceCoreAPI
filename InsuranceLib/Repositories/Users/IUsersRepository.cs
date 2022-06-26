@@ -24,5 +24,6 @@ namespace InsuranceLib.DAL.Repositories.Users
         Task<int> CountWhere(Expression<Func<T, bool>> predicate);
         string GetRoleIdByUserID(Expression<Func<IdentityUserRole<string>, bool>> predicate);
         string GetRoleIdWhere(Expression<Func<IdentityRole<string>, bool>> predicate);
+        Task<IEnumerable<User>> GetUsersByParentId(string parentId);
     }
 }
