@@ -24,13 +24,21 @@ namespace InsuranceWebApi.Controllers
         private readonly IRepository<InsurancePlan> plansRepo;
         private readonly IRepository<InsuranceType> typesRepo;
         private readonly IRepository<Image> imagesRepo;
+        private readonly IRepository<Policy> policyRepo;
+        private readonly IRepository<InsuranceAccount> accountsRepo;
+        private readonly IRepository<Payment> paymentsRepo;
+        private readonly IRepository<InsuranceClaim> claimsRepo;
 
         public AdminController(IRepository<State> statesRepo,
                                IRepository<City> citiesRepo,
                                IRepository<InsuranceScheme> schemesRepo,
                                IRepository<InsurancePlan> plansRepo,
                                IRepository<InsuranceType> typesRepo,
-                               IRepository<Image> imagesRepo)
+                               IRepository<Image> imagesRepo,
+                               IRepository<Policy> policyRepo,
+                               IRepository<InsuranceAccount> accountsRepo,
+                               IRepository<Payment> paymentsRepo,
+                               IRepository<InsuranceClaim> claimsRepo)
         {
             this.statesRepo = statesRepo;
             this.citiesRepo = citiesRepo;
@@ -38,6 +46,10 @@ namespace InsuranceWebApi.Controllers
             this.plansRepo = plansRepo;
             this.typesRepo = typesRepo;
             this.imagesRepo = imagesRepo;
+            this.policyRepo = policyRepo;
+            this.accountsRepo = accountsRepo;
+            this.paymentsRepo = paymentsRepo;
+            this.claimsRepo = claimsRepo;
         }
 
         [HttpGet("state/getStates")]

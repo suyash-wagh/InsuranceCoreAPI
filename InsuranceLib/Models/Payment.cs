@@ -7,6 +7,7 @@ namespace InsuranceLib.DAL.Models
     public class Payment : BaseEntity
     {
         public Guid AccountId { get; set; }
+        public Guid PolicyId { get; set; }
         public double TransactionAmount { get; set; }
         public double PaymentAmount { get; set; }
         public double FinalAmount { get; set; }

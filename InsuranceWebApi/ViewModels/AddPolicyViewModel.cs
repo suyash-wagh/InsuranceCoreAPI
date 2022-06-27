@@ -11,5 +11,7 @@ namespace InsuranceWebApi.ViewModels
         public double TotalPremiumAmount { get; set; }
         public double InstallmentAmount { get; set; }
         public int InstallmentCount { get; set; }
+        public int PolicyTerm { get; set; }
+        public double SumAssured { get; set; }
     }
 }

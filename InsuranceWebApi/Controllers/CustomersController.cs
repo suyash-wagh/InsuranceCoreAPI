@@ -13,6 +13,8 @@ using System.Threading.Tasks;
 
 namespace InsuranceWebApi.Controllers
 {
+    [Route("api/[controller]")]
+    [ApiController]
     public class CustomersController : Controller
     {
         private readonly IRepository<State> statesRepo;
@@ -68,7 +70,7 @@ namespace InsuranceWebApi.Controllers
         [HttpPost("addPolicy")]
         public async Task<IActionResult> PostPolicy([FromBody] AddPolicyViewModel policyVm)
         {
-            if (!ModelState.IsValid) return BadRequest("Not a valid input.");
+            //if (!ModelState.IsValid) return BadRequest("Not a valid input.");
             InsurancePlan planHere = await plansRepo.FirstOrDefault(p => p.InsuranceSchemeTitle == policyVm.InsuranceSchemeTitle);
             InsuranceScheme schemeHere = await schemesRepo.FirstOrDefault(p => p.InsuranceSchemeTitle == policyVm.InsuranceSchemeTitle);
             InsuranceAccount accountHere = await accountsRepo.FirstOrDefault(a => a.CustomerId == policyVm.CustomerId);
@@ -92,7 +94,9 @@ namespace InsuranceWebApi.Controllers
                 InstallmentAmount = policyVm.InstallmentAmount,
                 InstallmentsCount = policyVm.InstallmentCount
             });
-
+            var policies = await policyRepo.GetWhere(p => p.AccountId == accountHere.Id 
+                                                          && p.InsuranceTypeTitle == planHere.InsuranceTypeTitle
+                                                          && p.InsuranceSchemeTitle == schemeHere.InsuranceSchemeTitle);
             await paymentsRepo.Add(new Payment()
             {
                 AccountId = accountHere.Id,
@@ -100,7 +104,8 @@ namespace InsuranceWebApi.Controllers
                 FinalAmount = policyVm.InstallmentAmount - agentCommission,
                 PaidDate = DateTime.Now,
                 IsPaid = true,
-                InstallmentNumber = 1
+                InstallmentNumber = 1,
+                PolicyId = Enumerable.ToList(policies)[0].Id
             });
 
             return Ok("Policy Added.");
@@ -123,7 +128,8 @@ namespace InsuranceWebApi.Controllers
                 FinalAmount = paymentVm.Amount - agentCommission,
                 PaidDate = DateTime.Now,
                 IsPaid = true,
-                InstallmentNumber = accountPayments.Count() + 1
+                InstallmentNumber = accountPayments.Count() + 1,
+                PolicyId = paymentVm.PolicyId
             });
             return Ok("Payment Added.");
         }
@@ -148,6 +154,29 @@ namespace InsuranceWebApi.Controllers
         public async Task<IActionResult> GetAccounts()
         {
             return Ok(await accountsRepo.GetAll());
+        }
+
+        [HttpGet("getAccount/{id}")]
+        public async Task<IActionResult> GetAccountById(string id)
+        {
+            var accounts = await accountsRepo.GetWhere(a => a.Id == Guid.Parse(id));
+            var account = Enumerable.ToList(accounts)[0];
+
+            var policies = await policyRepo.GetWhere(p => p.AccountId == account.Id);
+            var payments = await paymentsRepo.GetWhere(p => p.AccountId == account.Id);
+            var claims = await claimsRepo.GetWhere(c => c.AccountId == account.Id);
+
+            account.Policies = (List<Policy>)policies;
+            account.Payments = (List<Payment>)payments;
+            account.InsuranceClaims = (List<InsuranceClaim>)claims;
+            return Ok(account);
+        }
+
+        [HttpGet("getPolicy/{id}")]
+        public async Task<IActionResult> GetPolicyById(string id)
+        {
+            return Ok(await policyRepo.FirstOrDefault(a => a.Id == Guid.Parse(id)));
+            
         }
 
         [HttpGet("getAccountsByAgentId/{agentId}")]
