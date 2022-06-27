@@ -15,5 +15,7 @@ namespace InsuranceLib.DAL.Models
         public int ProfitRatio { get; set; }
         public double SumAssured { get; set; }
         public double AgentCommission { get; set; }
+        public double InstallmentAmount { get; set; }
+        public int InstallmentsCount { get; set; }
     }
 }

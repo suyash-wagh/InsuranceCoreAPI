@@ -23,6 +23,8 @@ namespace InsuranceWebApi.Controllers
         private readonly IRepository<Image> imagesRepo;
         private readonly IRepository<Policy> policyRepo;
         private readonly IRepository<InsuranceAccount> accountsRepo;
+        private readonly IRepository<Payment> paymentsRepo;
+        private readonly IRepository<InsuranceClaim> claimsRepo;
 
         public CustomersController(IRepository<State> statesRepo,
                                IRepository<City> citiesRepo,
@@ -31,7 +33,9 @@ namespace InsuranceWebApi.Controllers
                                IRepository<InsuranceType> typesRepo,
                                IRepository<Image> imagesRepo,
                                IRepository<Policy> policyRepo,
-                               IRepository<InsuranceAccount> accountsRepo)
+                               IRepository<InsuranceAccount> accountsRepo,
+                               IRepository<Payment> paymentsRepo,
+                               IRepository<InsuranceClaim> claimsRepo)
         {
             this.statesRepo = statesRepo;
             this.citiesRepo = citiesRepo;
@@ -41,12 +45,24 @@ namespace InsuranceWebApi.Controllers
             this.imagesRepo = imagesRepo;
             this.policyRepo = policyRepo;
             this.accountsRepo = accountsRepo;
+            this.paymentsRepo = paymentsRepo;
+            this.claimsRepo = claimsRepo;
         }
 
         [HttpGet("getPolicies")]
         public async Task<IActionResult> GetPolicies()
         {
             return Ok(await policyRepo.GetAll());
+        }
+        [HttpGet("getPayments")]
+        public async Task<IActionResult> GetPayments()
+        {
+            return Ok(await paymentsRepo.GetAll());
+        }
+        [HttpGet("getClaims")]
+        public async Task<IActionResult> GetClaims()
+        {
+            return Ok(await claimsRepo.GetAll());
         }
 
         [HttpPost("addPolicy")]
@@ -61,6 +77,7 @@ namespace InsuranceWebApi.Controllers
                 return BadRequest("Investment amount is not valid");
             }
             int endYears = planHere.PolicyTermMax;
+            double agentCommission = policyVm.InstallmentAmount * schemeHere.CommissionNewRegistration / 100;
             await policyRepo.Add(new Policy()
             {
                 AccountId = accountHere.Id,
@@ -71,9 +88,44 @@ namespace InsuranceWebApi.Controllers
                 TotalPremiumAmount = policyVm.TotalPremiumAmount,
                 ProfitRatio = planHere.ProfitRatio,
                 SumAssured = policyVm.TotalPremiumAmount + policyVm.TotalPremiumAmount * planHere.ProfitRatio / 100,
-                AgentCommission = policyVm.TotalPremiumAmount * schemeHere.CommissionNewRegistration / 100
+                AgentCommission = policyVm.TotalPremiumAmount * schemeHere.CommissionNewRegistration / 100,
+                InstallmentAmount = policyVm.InstallmentAmount,
+                InstallmentsCount = policyVm.InstallmentCount
             });
+
+            await paymentsRepo.Add(new Payment()
+            {
+                AccountId = accountHere.Id,
+                PaymentAmount = policyVm.InstallmentAmount,
+                FinalAmount = policyVm.InstallmentAmount - agentCommission,
+                PaidDate = DateTime.Now,
+                IsPaid = true,
+                InstallmentNumber = 1
+            });
+
             return Ok("Policy Added.");
+        }
+
+        [HttpPost("addPayment")]
+        public async Task<IActionResult> AddPayment([FromBody] AddPaymentViewModel paymentVm)
+        {
+            if (!ModelState.IsValid) return BadRequest("Not a valid input.");
+            InsuranceAccount accountHere = await accountsRepo.FirstOrDefault(a => a.CustomerId == paymentVm.CustomerId);
+            InsuranceScheme schemeHere = await schemesRepo.FirstOrDefault(p => p.InsuranceSchemeTitle == paymentVm.InsuranceSchemeTitle);
+            var accountPayments = await paymentsRepo.GetWhere(p => p.AccountId == accountHere.Id);
+            var agentCommission = paymentVm.Amount * schemeHere.CommissionPerInstallment / 100;
+            if (accountHere == null) return BadRequest("No accounts found");
+
+            await paymentsRepo.Add(new Payment()
+            {
+                AccountId = accountHere.Id,
+                PaymentAmount = paymentVm.Amount,
+                FinalAmount = paymentVm.Amount - agentCommission,
+                PaidDate = DateTime.Now,
+                IsPaid = true,
+                InstallmentNumber = accountPayments.Count() + 1
+            });
+            return Ok("Payment Added.");
         }
 
         [HttpGet("getAccountByCustomerId/{customerId}")]
@@ -81,9 +133,39 @@ namespace InsuranceWebApi.Controllers
         {
             var accounts = await accountsRepo.GetWhere(a => a.CustomerId == customerId);
             var account = Enumerable.ToList(accounts)[0];
+
             var policies = await policyRepo.GetWhere(p => p.AccountId == account.Id);
+            var payments = await paymentsRepo.GetWhere(p => p.AccountId == account.Id);
+            var claims = await claimsRepo.GetWhere(c => c.AccountId == account.Id);
+
             account.Policies = (List<Policy>)policies;
+            account.Payments = (List<Payment>)payments;
+            account.InsuranceClaims = (List<InsuranceClaim>)claims;
             return Ok(account);
+        }
+
+        [HttpGet("getAccounts")]
+        public async Task<IActionResult> GetAccounts()
+        {
+            return Ok(await accountsRepo.GetAll());
+        }
+
+        [HttpGet("getAccountsByAgentId/{agentId}")]
+        public async Task<IActionResult> GetAccountsByAgentId(string agentId)
+        {
+            var accounts = await accountsRepo.GetWhere(a => a.AgentId == agentId);
+            var accountsList = Enumerable.ToList(accounts);
+
+            foreach(var account in accountsList)
+            {
+                var policies = await policyRepo.GetWhere(p => p.AccountId == account.Id);
+                var payments = await paymentsRepo.GetWhere(p => p.AccountId == account.Id);
+                var claims = await claimsRepo.GetWhere(c => c.AccountId == account.Id);
+                account.Policies = (List<Policy>)policies;
+                account.Payments = (List<Payment>)payments;
+                account.InsuranceClaims = (List<InsuranceClaim>)claims;
+            }
+            return Ok(accountsList);
         }
     }
 }

@@ -13,5 +13,13 @@ namespace InsuranceLib.DAL.Models
 
         [NotMapped]
         public List<Policy> Policies { get; set; }
+
+        [NotMapped]
+        public List<Payment> Payments { get; set; }
+
+        [NotMapped]
+        public List<InsuranceClaim> InsuranceClaims { get; set; }
+
     }
 }
+    

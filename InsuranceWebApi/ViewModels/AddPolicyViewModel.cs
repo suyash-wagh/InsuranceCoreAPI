@@ -9,5 +9,7 @@ namespace InsuranceWebApi.ViewModels
         public string InsuranceTypeTitle { get; set; }
         public string InsuranceSchemeTitle { get; set; }
         public double TotalPremiumAmount { get; set; }
+        public double InstallmentAmount { get; set; }
+        public int InstallmentCount { get; set; }
     }
 }

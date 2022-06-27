@@ -73,7 +73,7 @@ namespace InsuranceWebApi.Controllers
             return Ok("User updated.");
         }
 
-        [Authorize(Roles = Roles.Admin)]
+        [Authorize(Roles = Roles.Admin+ "," + Roles.Employee)]
         [HttpDelete("delete/{id}")]
         public async Task<IActionResult> DeleteUser(string id)
         {

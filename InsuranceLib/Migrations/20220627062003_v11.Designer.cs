@@ -4,14 +4,16 @@ using InsuranceLib.DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace InsuranceLib.DAL.Migrations
 {
     [DbContext(typeof(InsuranceDbContext))]
-    partial class InsuranceDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220627062003_v11")]
+    partial class v11
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -283,19 +285,6 @@ namespace InsuranceLib.DAL.Migrations
                     b.ToTable("City");
                 });
 
-            modelBuilder.Entity("InsuranceLib.DAL.Models.Commission", b =>
-                {
-                    b.HasBaseType("InsuranceLib.DAL.Models.BaseEntity");
-
-                    b.Property<Guid>("AccountId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<double>("Amount")
-                        .HasColumnType("float");
-
-                    b.ToTable("Commission");
-                });
-
             modelBuilder.Entity("InsuranceLib.DAL.Models.Image", b =>
                 {
                     b.HasBaseType("InsuranceLib.DAL.Models.BaseEntity");
@@ -328,22 +317,6 @@ namespace InsuranceLib.DAL.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.ToTable("InsuranceAccount");
-                });
-
-            modelBuilder.Entity("InsuranceLib.DAL.Models.InsuranceClaim", b =>
-                {
-                    b.HasBaseType("InsuranceLib.DAL.Models.BaseEntity");
-
-                    b.Property<Guid>("AccountId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool>("IsWithdrawed")
-                        .HasColumnType("bit");
-
-                    b.Property<double>("WithdrawalAmount")
-                        .HasColumnType("float");
-
-                    b.ToTable("InsuranceClaim");
                 });
 
             modelBuilder.Entity("InsuranceLib.DAL.Models.InsurancePlan", b =>
@@ -431,34 +404,6 @@ namespace InsuranceLib.DAL.Migrations
                     b.ToTable("InsuranceType");
                 });
 
-            modelBuilder.Entity("InsuranceLib.DAL.Models.Payment", b =>
-                {
-                    b.HasBaseType("InsuranceLib.DAL.Models.BaseEntity");
-
-                    b.Property<Guid>("AccountId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<double>("FinalAmount")
-                        .HasColumnType("float");
-
-                    b.Property<int>("InstallmentNumber")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsPaid")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime>("PaidDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<double>("PaymentAmount")
-                        .HasColumnType("float");
-
-                    b.Property<double>("TransactionAmount")
-                        .HasColumnType("float");
-
-                    b.ToTable("Payment");
-                });
-
             modelBuilder.Entity("InsuranceLib.DAL.Models.Policy", b =>
                 {
                     b.HasBaseType("InsuranceLib.DAL.Models.BaseEntity");
@@ -510,16 +455,6 @@ namespace InsuranceLib.DAL.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.ToTable("State");
-                });
-
-            modelBuilder.Entity("InsuranceLib.DAL.Models.WithdrawAccount", b =>
-                {
-                    b.HasBaseType("InsuranceLib.DAL.Models.BaseEntity");
-
-                    b.Property<Guid>("AccountId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.ToTable("WithdrawAccount");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -588,15 +523,6 @@ namespace InsuranceLib.DAL.Migrations
                     b.Navigation("State");
                 });
 
-            modelBuilder.Entity("InsuranceLib.DAL.Models.Commission", b =>
-                {
-                    b.HasOne("InsuranceLib.DAL.Models.BaseEntity", null)
-                        .WithOne()
-                        .HasForeignKey("InsuranceLib.DAL.Models.Commission", "Id")
-                        .OnDelete(DeleteBehavior.ClientCascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("InsuranceLib.DAL.Models.Image", b =>
                 {
                     b.HasOne("InsuranceLib.DAL.Models.BaseEntity", "BaseEntity")
@@ -617,15 +543,6 @@ namespace InsuranceLib.DAL.Migrations
                     b.HasOne("InsuranceLib.DAL.Models.BaseEntity", null)
                         .WithOne()
                         .HasForeignKey("InsuranceLib.DAL.Models.InsuranceAccount", "Id")
-                        .OnDelete(DeleteBehavior.ClientCascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("InsuranceLib.DAL.Models.InsuranceClaim", b =>
-                {
-                    b.HasOne("InsuranceLib.DAL.Models.BaseEntity", null)
-                        .WithOne()
-                        .HasForeignKey("InsuranceLib.DAL.Models.InsuranceClaim", "Id")
                         .OnDelete(DeleteBehavior.ClientCascade)
                         .IsRequired();
                 });
@@ -669,15 +586,6 @@ namespace InsuranceLib.DAL.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("InsuranceLib.DAL.Models.Payment", b =>
-                {
-                    b.HasOne("InsuranceLib.DAL.Models.BaseEntity", null)
-                        .WithOne()
-                        .HasForeignKey("InsuranceLib.DAL.Models.Payment", "Id")
-                        .OnDelete(DeleteBehavior.ClientCascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("InsuranceLib.DAL.Models.Policy", b =>
                 {
                     b.HasOne("InsuranceLib.DAL.Models.BaseEntity", null)
@@ -692,15 +600,6 @@ namespace InsuranceLib.DAL.Migrations
                     b.HasOne("InsuranceLib.DAL.Models.BaseEntity", null)
                         .WithOne()
                         .HasForeignKey("InsuranceLib.DAL.Models.State", "Id")
-                        .OnDelete(DeleteBehavior.ClientCascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("InsuranceLib.DAL.Models.WithdrawAccount", b =>
-                {
-                    b.HasOne("InsuranceLib.DAL.Models.BaseEntity", null)
-                        .WithOne()
-                        .HasForeignKey("InsuranceLib.DAL.Models.WithdrawAccount", "Id")
                         .OnDelete(DeleteBehavior.ClientCascade)
                         .IsRequired();
                 });

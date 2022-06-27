@@ -4,14 +4,16 @@ using InsuranceLib.DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace InsuranceLib.DAL.Migrations
 {
     [DbContext(typeof(InsuranceDbContext))]
-    partial class InsuranceDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220627080110_v13")]
+    partial class v13
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -512,16 +514,6 @@ namespace InsuranceLib.DAL.Migrations
                     b.ToTable("State");
                 });
 
-            modelBuilder.Entity("InsuranceLib.DAL.Models.WithdrawAccount", b =>
-                {
-                    b.HasBaseType("InsuranceLib.DAL.Models.BaseEntity");
-
-                    b.Property<Guid>("AccountId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.ToTable("WithdrawAccount");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -692,15 +684,6 @@ namespace InsuranceLib.DAL.Migrations
                     b.HasOne("InsuranceLib.DAL.Models.BaseEntity", null)
                         .WithOne()
                         .HasForeignKey("InsuranceLib.DAL.Models.State", "Id")
-                        .OnDelete(DeleteBehavior.ClientCascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("InsuranceLib.DAL.Models.WithdrawAccount", b =>
-                {
-                    b.HasOne("InsuranceLib.DAL.Models.BaseEntity", null)
-                        .WithOne()
-                        .HasForeignKey("InsuranceLib.DAL.Models.WithdrawAccount", "Id")
                         .OnDelete(DeleteBehavior.ClientCascade)
                         .IsRequired();
                 });

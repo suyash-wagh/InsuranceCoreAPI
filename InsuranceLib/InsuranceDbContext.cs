@@ -17,6 +17,11 @@ namespace InsuranceLib.DAL
         public DbSet<Image> Images { get; set; }
         public DbSet<InsuranceAccount> Accounts { get; set; }
         public DbSet<Policy> Policies { get; set; }
+        public DbSet<Payment> Payments { get; set; }
+        public DbSet<InsuranceClaim> InsuranceClaims { get; set; }
+        public DbSet<Commission> Commissions { get; set; }
+        public DbSet<WithdrawAccount> WithdrawAccounts { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -29,6 +34,10 @@ namespace InsuranceLib.DAL
             modelBuilder.Entity<Image>().ToTable("Image");
             modelBuilder.Entity<Policy>().ToTable("Policy");
             modelBuilder.Entity<InsuranceAccount>().ToTable("InsuranceAccount");
+            modelBuilder.Entity<InsuranceClaim>().ToTable("InsuranceClaim");
+            modelBuilder.Entity<Commission>().ToTable("Commission");
+            modelBuilder.Entity<Payment>().ToTable("Payment");
+            modelBuilder.Entity<WithdrawAccount>().ToTable("WithdrawAccount");
         }
     }
 }
