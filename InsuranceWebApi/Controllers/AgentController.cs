@@ -2,6 +2,7 @@
 using InsuranceLib.DAL.Repositories;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace InsuranceWebApi.Controllers
@@ -63,6 +64,39 @@ namespace InsuranceWebApi.Controllers
         public async Task<IActionResult> GetCommissionByAccountId(string accountId)
         {
             return Ok(await commsRepo.GetWhere(c => c.AccountId.ToString() == accountId));
+        }
+
+        [HttpGet("getWithdrawAccountById/{id}")]
+        public async Task<IActionResult> GetWithdrawAccountById(string id)
+        {
+            return Ok(await wdaccountsRepo.GetWhere(w => w.Id.ToString() == id));
+        }
+
+        [HttpGet("getWithdrawAccounts")]
+        public async Task<IActionResult> GetWithdrawAccounts()
+        {
+            return Ok(await wdaccountsRepo.GetAll());
+        }
+
+        [HttpGet("getWithdrawAccountByAgentId/{agentId}")]
+        public async Task<IActionResult> GetWithdrawAccountByAgentId(string agentId)
+        {
+            var wdAccounts = await wdaccountsRepo.GetWhere(w => w.AgentId == agentId);
+            var wdAccount = Enumerable.ToList(wdAccounts)[0];
+            var commissions = await commsRepo.GetWhere(c => c.AgentId == agentId);
+            wdAccount.Commissions = Enumerable.ToList(commissions);
+           
+            return Ok(wdAccount);
+        }
+
+        [HttpPut("withdrawAmount")]
+        public async Task<IActionResult> WithdrawAmount(WithdrawAccount withdrawAccount)
+        {
+            var wdAccounts = await wdaccountsRepo.GetWhere(w => w.Id == withdrawAccount.Id);
+            var wdAccount = Enumerable.ToList(wdAccounts)[0];
+            wdAccount.TotalAmount -= withdrawAccount.TotalAmount;
+            await wdaccountsRepo.Update(wdAccount);
+            return Ok(wdAccount);
         }
     }
 }

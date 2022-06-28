@@ -29,18 +29,24 @@ namespace InsuranceWebApi.Controllers
         private readonly UserManager<User> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IRepository<InsuranceAccount> accountsRepo;
+        private readonly IRepository<Commission> commsRepo;
+        private readonly IRepository<WithdrawAccount> wdaccountsRepo;
         private readonly IConfiguration _configuration;
 
         public UsersController(UsersService service, 
                                IConfiguration configuration, 
                                UserManager<User> userManager, 
                                RoleManager<IdentityRole> roleManager,
-                               IRepository<InsuranceAccount> accountsRepo)
+                               IRepository<InsuranceAccount> accountsRepo,
+                               IRepository<Commission> commsRepo,
+                               IRepository<WithdrawAccount> wdaccountsRepo)
         {
             this.service = service;
             this._userManager = userManager;
             this._roleManager = roleManager;
             this.accountsRepo = accountsRepo;
+            this.commsRepo = commsRepo;
+            this.wdaccountsRepo = wdaccountsRepo;
             this._configuration = configuration;
         }
 
@@ -297,7 +303,13 @@ namespace InsuranceWebApi.Controllers
             if (result.Succeeded)
             {
                 await _userManager.AddToRoleAsync(userToAdd, Roles.Agent);
-                return Ok("Added Agent.");
+                User agent = await _userManager.FindByEmailAsync(customerVm.Email);
+                await wdaccountsRepo.Add(new WithdrawAccount()
+                {
+                    AgentId = agent.Id,
+                    TotalAmount = 0
+                });
+                return Ok("Added Agent with withdrawl account.");
             }
             else
                 return BadRequest("Agent could not be created.");
