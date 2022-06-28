@@ -29,6 +29,7 @@ namespace InsuranceWebApi.Controllers
         private readonly IRepository<InsuranceClaim> claimsRepo;
         private readonly IRepository<Commission> commsRepo;
         private readonly IRepository<WithdrawAccount> wdaccountsRepo;
+        private readonly IRepository<Query> queryRepo;
 
         public CustomersController(IRepository<State> statesRepo,
                                IRepository<City> citiesRepo,
@@ -41,7 +42,8 @@ namespace InsuranceWebApi.Controllers
                                IRepository<Payment> paymentsRepo,
                                IRepository<InsuranceClaim> claimsRepo,
                                IRepository<Commission> commsRepo,
-                               IRepository<WithdrawAccount> wdaccountsRepo)
+                               IRepository<WithdrawAccount> wdaccountsRepo,
+                               IRepository<Query> queryRepo)
         {
             this.statesRepo = statesRepo;
             this.citiesRepo = citiesRepo;
@@ -55,6 +57,7 @@ namespace InsuranceWebApi.Controllers
             this.claimsRepo = claimsRepo;
             this.commsRepo = commsRepo;
             this.wdaccountsRepo = wdaccountsRepo;
+            this.queryRepo = queryRepo;
         }
 
         [HttpGet("getPolicies")]
@@ -224,6 +227,24 @@ namespace InsuranceWebApi.Controllers
                 account.InsuranceClaims = (List<InsuranceClaim>)claims;
             }
             return Ok(accountsList);
+        }
+
+        [HttpPost("addQuery")]
+        public async Task<IActionResult> AddQuery(AddQueryViewModel queryVm)
+        {
+            await queryRepo.Add(new Query()
+            {
+                CustomerId = queryVm.CustomerId,
+                Title = queryVm.Title,
+                Description = queryVm.Description
+            });
+            return Ok("Query added.");
+        }
+
+        [HttpGet("Query/getQueryByCustomerId/{id}")]
+        public async Task<IActionResult> GetQueriesById(string id)
+        {
+            return Ok(await queryRepo.GetWhere(q => q.CustomerId == id));
         }
     }
 }

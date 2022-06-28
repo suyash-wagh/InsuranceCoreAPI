@@ -28,6 +28,7 @@ namespace InsuranceWebApi.Controllers
         private readonly IRepository<InsuranceAccount> accountsRepo;
         private readonly IRepository<Payment> paymentsRepo;
         private readonly IRepository<InsuranceClaim> claimsRepo;
+        private readonly IRepository<Query> queryRepo;
 
         public AdminController(IRepository<State> statesRepo,
                                IRepository<City> citiesRepo,
@@ -38,7 +39,8 @@ namespace InsuranceWebApi.Controllers
                                IRepository<Policy> policyRepo,
                                IRepository<InsuranceAccount> accountsRepo,
                                IRepository<Payment> paymentsRepo,
-                               IRepository<InsuranceClaim> claimsRepo)
+                               IRepository<InsuranceClaim> claimsRepo,
+                               IRepository<Query> queryRepo)
         {
             this.statesRepo = statesRepo;
             this.citiesRepo = citiesRepo;
@@ -50,6 +52,7 @@ namespace InsuranceWebApi.Controllers
             this.accountsRepo = accountsRepo;
             this.paymentsRepo = paymentsRepo;
             this.claimsRepo = claimsRepo;
+            this.queryRepo = queryRepo;
         }
 
         [HttpGet("state/getStates")]
@@ -319,6 +322,26 @@ namespace InsuranceWebApi.Controllers
         }
 
 
+        //Query Api Endpoints---------------------------------------------------------------------------------------->
+
+        [HttpPut("Query/replyToQuery")]
+        public async Task<IActionResult> ReplyToQuery(Query query)
+        {
+            await queryRepo.Update(query);
+            return Ok("Query Updated.");
+        }
+
+        [HttpGet("Query/getQueries")]
+        public async Task<IActionResult> GetQueries()
+        {
+            return Ok(await queryRepo.GetAll());
+        }
+
+        [HttpGet("Query/getQueryById/{id}")]
+        public async Task<IActionResult> GetQueriesById(string id)
+        {
+            return Ok(await queryRepo.GetWhere(q => q.Id.ToString() == id));
+        }
         //Image Api Endpoints---------------------------------------------------------------------------------------->
 
         [HttpGet("Image/getImages")]

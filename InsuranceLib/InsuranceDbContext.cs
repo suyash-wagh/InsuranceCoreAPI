@@ -21,6 +21,7 @@ namespace InsuranceLib.DAL
         public DbSet<InsuranceClaim> InsuranceClaims { get; set; }
         public DbSet<Commission> Commissions { get; set; }
         public DbSet<WithdrawAccount> WithdrawAccounts { get; set; }
+        public DbSet<Query> Queries { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -38,6 +39,7 @@ namespace InsuranceLib.DAL
             modelBuilder.Entity<Commission>().ToTable("Commission");
             modelBuilder.Entity<Payment>().ToTable("Payment");
             modelBuilder.Entity<WithdrawAccount>().ToTable("WithdrawAccount");
+            modelBuilder.Entity<Query>().ToTable("Query");
         }
     }
 }
