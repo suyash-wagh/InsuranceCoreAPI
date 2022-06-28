@@ -27,6 +27,8 @@ namespace InsuranceWebApi.Controllers
         private readonly IRepository<InsuranceAccount> accountsRepo;
         private readonly IRepository<Payment> paymentsRepo;
         private readonly IRepository<InsuranceClaim> claimsRepo;
+        private readonly IRepository<Commission> commsRepo;
+        private readonly IRepository<WithdrawAccount> wdaccountsRepo;
 
         public CustomersController(IRepository<State> statesRepo,
                                IRepository<City> citiesRepo,
@@ -37,7 +39,9 @@ namespace InsuranceWebApi.Controllers
                                IRepository<Policy> policyRepo,
                                IRepository<InsuranceAccount> accountsRepo,
                                IRepository<Payment> paymentsRepo,
-                               IRepository<InsuranceClaim> claimsRepo)
+                               IRepository<InsuranceClaim> claimsRepo,
+                               IRepository<Commission> commsRepo,
+                               IRepository<WithdrawAccount> wdaccountsRepo)
         {
             this.statesRepo = statesRepo;
             this.citiesRepo = citiesRepo;
@@ -49,6 +53,8 @@ namespace InsuranceWebApi.Controllers
             this.accountsRepo = accountsRepo;
             this.paymentsRepo = paymentsRepo;
             this.claimsRepo = claimsRepo;
+            this.commsRepo = commsRepo;
+            this.wdaccountsRepo = wdaccountsRepo;
         }
 
         [HttpGet("getPolicies")]
@@ -86,10 +92,10 @@ namespace InsuranceWebApi.Controllers
                 InsuranceTypeTitle = policyVm.InsuranceTypeTitle,
                 InsuranceSchemeTitle = policyVm.InsuranceSchemeTitle,
                 MaturityDate = DateTime.Now.AddYears(endYears),
-                PolicyTerm = endYears,
+                PolicyTerm = policyVm.PolicyTerm,
                 TotalPremiumAmount = policyVm.TotalPremiumAmount,
                 ProfitRatio = planHere.ProfitRatio,
-                SumAssured = policyVm.TotalPremiumAmount + policyVm.TotalPremiumAmount * planHere.ProfitRatio / 100,
+                SumAssured = policyVm.SumAssured,
                 AgentCommission = policyVm.TotalPremiumAmount * schemeHere.CommissionNewRegistration / 100,
                 InstallmentAmount = policyVm.InstallmentAmount,
                 InstallmentsCount = policyVm.InstallmentCount
@@ -106,6 +112,14 @@ namespace InsuranceWebApi.Controllers
                 IsPaid = true,
                 InstallmentNumber = 1,
                 PolicyId = Enumerable.ToList(policies)[0].Id
+            });
+
+            await commsRepo.Add(new Commission()
+            {
+                AgentId = accountHere.AgentId,
+                AccountId = accountHere.Id,
+                CommissionAmount = agentCommission,
+                PolicyId= Enumerable.ToList(policies)[0].Id
             });
 
             return Ok("Policy Added.");
@@ -131,6 +145,15 @@ namespace InsuranceWebApi.Controllers
                 InstallmentNumber = accountPayments.Count() + 1,
                 PolicyId = paymentVm.PolicyId
             });
+
+            await commsRepo.Add(new Commission()
+            {
+                AgentId = accountHere.AgentId,
+                AccountId = accountHere.Id,
+                CommissionAmount = agentCommission,
+                PolicyId = paymentVm.PolicyId
+            });
+
             return Ok("Payment Added.");
         }
 
@@ -148,6 +171,12 @@ namespace InsuranceWebApi.Controllers
             account.Payments = (List<Payment>)payments;
             account.InsuranceClaims = (List<InsuranceClaim>)claims;
             return Ok(account);
+        }
+
+        [HttpGet("getPaymentsByPolicyId/{policyId}")]
+        public async Task<IActionResult> GetPaymentsByPolicyId(string policyId)
+        {
+            return Ok(await paymentsRepo.GetWhere(p => p.PolicyId.ToString() == policyId));
         }
 
         [HttpGet("getAccounts")]

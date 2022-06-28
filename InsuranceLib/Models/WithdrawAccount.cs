@@ -7,7 +7,7 @@ namespace InsuranceLib.DAL.Models
 {
     public class WithdrawAccount : BaseEntity
     {
-        public Guid AccountId { get; set; }
+        public Guid AgentId { get; set; }
 
         [NotMapped]
         public List<Commission> Commissions { get; set; }

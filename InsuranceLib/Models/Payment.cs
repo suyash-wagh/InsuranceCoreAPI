@@ -8,7 +8,6 @@ namespace InsuranceLib.DAL.Models
     {
         public Guid AccountId { get; set; }
         public Guid PolicyId { get; set; }
-        public double TransactionAmount { get; set; }
         public double PaymentAmount { get; set; }
         public double FinalAmount { get; set; }
         public bool IsPaid { get; set; }

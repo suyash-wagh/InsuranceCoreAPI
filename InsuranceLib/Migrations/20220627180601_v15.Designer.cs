@@ -4,14 +4,16 @@ using InsuranceLib.DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace InsuranceLib.DAL.Migrations
 {
     [DbContext(typeof(InsuranceDbContext))]
-    partial class InsuranceDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220627180601_v15")]
+    partial class v15
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -290,14 +292,8 @@ namespace InsuranceLib.DAL.Migrations
                     b.Property<Guid>("AccountId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("AgentId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<double>("CommissionAmount")
+                    b.Property<double>("Amount")
                         .HasColumnType("float");
-
-                    b.Property<Guid>("PolicyId")
-                        .HasColumnType("uniqueidentifier");
 
                     b.ToTable("Commission");
                 });
@@ -462,6 +458,9 @@ namespace InsuranceLib.DAL.Migrations
                     b.Property<Guid>("PolicyId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<double>("TransactionAmount")
+                        .HasColumnType("float");
+
                     b.ToTable("Payment");
                 });
 
@@ -522,7 +521,7 @@ namespace InsuranceLib.DAL.Migrations
                 {
                     b.HasBaseType("InsuranceLib.DAL.Models.BaseEntity");
 
-                    b.Property<Guid>("AgentId")
+                    b.Property<Guid>("AccountId")
                         .HasColumnType("uniqueidentifier");
 
                     b.ToTable("WithdrawAccount");
