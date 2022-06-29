@@ -9,6 +9,7 @@ namespace InsuranceLib.DAL.Models
     public class InsuranceType : BaseEntity
     {
         public string TypeTitle { get; set; }
+        public Image TypeImage { get; set; }
         public bool IsActive { get; set; }
     }
 }

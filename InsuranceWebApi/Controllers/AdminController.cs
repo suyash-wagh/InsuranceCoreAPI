@@ -11,6 +11,8 @@ using Microsoft.Web.Helpers;
 using System.IO;
 using InsuranceWebApi.Helpers;
 using Microsoft.AspNetCore.Authorization;
+using System.Linq;
+
 namespace InsuranceWebApi.Controllers
 {
    // [Authorize(Roles = Roles.Admin)]
@@ -280,28 +282,31 @@ namespace InsuranceWebApi.Controllers
                 IsActive = planVm.IsActive,
             });
 
+            var types = await typesRepo.GetWhere(t => t.TypeTitle == planVm.TypeTitle);
+            var type = Enumerable.ToList(types)[0];
             if (planVm.ImageFile != null)
             {
-                if (planVm.ImageFile.Length > 0)
-                {
-                    byte[] imageData = null;
-                    IEnumerable<InsuranceType> type = await typesRepo.GetWhere(t => t.TypeTitle == planVm.TypeTitle);
-                    using (var stream = planVm.ImageFile.OpenReadStream())
-                    {
-                        using (var memoryStream = new MemoryStream())
-                        {
-                            stream.CopyTo(memoryStream);
-                            imageData = memoryStream.ToArray();
-                        }
-                    }
-                    await imagesRepo.Add(new Image()
-                    {
-                        ImageData = imageData,
-                        ImageTitle = planVm.ImageFile.FileName,
-                        BaseEntity = type.GetEnumerator().Current
-                    });
-                    return Ok("Type Added along with the image.");
-                }
+                //UploadImage(planVm.ImageFile, type.Id.ToString());
+                //if (planVm.ImageFile.Length > 0)
+                //{
+                //    byte[] imageData = null;
+                //    IEnumerable<InsuranceType> type = await typesRepo.GetWhere(t => t.TypeTitle == planVm.TypeTitle);
+                //    using (var stream = planVm.ImageFile.OpenReadStream())
+                //    {
+                //        using (var memoryStream = new MemoryStream())
+                //        {
+                //            stream.CopyTo(memoryStream);
+                //            imageData = memoryStream.ToArray();
+                //        }
+                //    }
+                //    await imagesRepo.Add(new Image()
+                //    {
+                //        ImageData = imageData,
+                //        ImageTitle = planVm.ImageFile.FileName,
+                //        BaseEntity = type.GetEnumerator().Current
+                //    });
+                //    return Ok("Type Added along with the image.");
+                //}
             }
             return Ok("Type Added with no image.");
         }
@@ -342,6 +347,8 @@ namespace InsuranceWebApi.Controllers
         {
             return Ok(await queryRepo.GetWhere(q => q.Id.ToString() == id));
         }
+
+
         //Image Api Endpoints---------------------------------------------------------------------------------------->
 
         [HttpGet("Image/getImages")]
@@ -350,23 +357,42 @@ namespace InsuranceWebApi.Controllers
             return Ok(await imagesRepo.GetAll());
         }
 
+        [HttpGet("Image/getImagesByBaseId/{id}")]
+        public async Task<IActionResult> GetImagesByBaseId(string id)
+        {
+            return Ok(await imagesRepo.GetWhere(i => i.BaseEntityId == id));
+        }
+
+        [HttpGet("Image/getImagesById/{id}")]
+        public async Task<IActionResult> GetImagesById(string id)
+        {
+            return Ok(await imagesRepo.GetWhere(i => i.Id.ToString() == id));
+        }
+
         [HttpGet("Image/getType/{id}")]
         public async Task<IActionResult> GetImageById(Guid id)
         {
             return Ok(await imagesRepo.GetById(id));
         }
 
-        //[HttpPost("Image/addType")]
-        //public async Task<IActionResult> PostImage([FromBody] AddTypeViewModel planVm)
-        //{
-        //    if (!ModelState.IsValid) return BadRequest("Not a valid input.");
-        //    await imagesRepo.Add(new Image()
-        //    {
-        //        TypeTitle = planVm.TypeTitle,
-        //        IsActive = planVm.IsActive,
-        //    });
+        [HttpPost("Image/uploadDocument")]
+        public async Task<IActionResult> UploadDocument([FromBody] AddDocumentViewModel docVm)
+        {
+            Image image = new Image();
+            image.ImageTitle = docVm.DocumentTitle;
+            image.BaseEntityId = docVm.BaseEntityId;
+            image.ImageData = docVm.DocumentFile;
 
-        //}
+            await imagesRepo.Add(image);
+            return Ok("Image uploaded.");
+        }
+
+        [HttpDelete("Image/deleteDocument/{id}")]
+        public async Task<IActionResult> DeleteDocument(Guid id)
+        {
+            await imagesRepo.Remove(id);
+            return Ok("Document Deleted.");
+        }
 
         [HttpPut("Image/update")]
         public async Task<IActionResult> PutImage([FromBody] Image value)
