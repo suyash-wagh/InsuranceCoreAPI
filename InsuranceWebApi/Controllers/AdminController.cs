@@ -146,7 +146,23 @@ namespace InsuranceWebApi.Controllers
         [HttpGet("InsuranceScheme/getSchemes")]
         public async Task<IActionResult> GetSchemes()
         {
-            return Ok(await schemesRepo.GetAll());
+            List<SendSchemeWithImage> sendSchemes = new List<SendSchemeWithImage>();
+            var schemes = Enumerable.ToList(await schemesRepo.GetAll());
+            foreach (var scheme in schemes)
+            {
+                var type = await typesRepo.FirstOrDefault(t => t.TypeTitle == scheme.InsuranceTypeTitle);
+                SendSchemeWithImage sendSchemeWithImage = new SendSchemeWithImage()
+                {
+                    Id = scheme.Id,
+                    InsuranceSchemeTitle = scheme.InsuranceSchemeTitle,
+                    Information = scheme.Information,
+                    InsuranceTypeTitle = scheme.InsuranceTypeTitle,
+                    InsranceTypeImage = type.TypeImage,
+                    CreatedAt = scheme.CreatedAt,
+                };
+                sendSchemes.Add(sendSchemeWithImage);
+            }
+            return Ok(sendSchemes);
         }
             
         [AllowAnonymous]
@@ -279,36 +295,11 @@ namespace InsuranceWebApi.Controllers
             await typesRepo.Add(new InsuranceType()
             {
                 TypeTitle = planVm.TypeTitle,
+                TypeImage = planVm.TypeImage,
                 IsActive = planVm.IsActive,
             });
-
-            var types = await typesRepo.GetWhere(t => t.TypeTitle == planVm.TypeTitle);
-            var type = Enumerable.ToList(types)[0];
-            if (planVm.ImageFile != null)
-            {
-                //UploadImage(planVm.ImageFile, type.Id.ToString());
-                //if (planVm.ImageFile.Length > 0)
-                //{
-                //    byte[] imageData = null;
-                //    IEnumerable<InsuranceType> type = await typesRepo.GetWhere(t => t.TypeTitle == planVm.TypeTitle);
-                //    using (var stream = planVm.ImageFile.OpenReadStream())
-                //    {
-                //        using (var memoryStream = new MemoryStream())
-                //        {
-                //            stream.CopyTo(memoryStream);
-                //            imageData = memoryStream.ToArray();
-                //        }
-                //    }
-                //    await imagesRepo.Add(new Image()
-                //    {
-                //        ImageData = imageData,
-                //        ImageTitle = planVm.ImageFile.FileName,
-                //        BaseEntity = type.GetEnumerator().Current
-                //    });
-                //    return Ok("Type Added along with the image.");
-                //}
-            }
-            return Ok("Type Added with no image.");
+     
+            return Ok("Type Added with an image.");
         }
 
         [HttpPut("InsuranceType/update")]

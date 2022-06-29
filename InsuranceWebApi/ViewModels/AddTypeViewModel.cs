@@ -7,7 +7,7 @@ namespace InsuranceWebApi.ViewModels
     {
         [Required(ErrorMessage ="Type name is required.")]
         public string TypeTitle { get; set; }
-        public IFormFile ImageFile { get; set; }
+        public string TypeImage { get; set; }
         public bool IsActive { get; set; }
     }
 }
