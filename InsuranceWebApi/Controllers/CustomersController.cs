@@ -1,7 +1,9 @@
 ﻿using InsuranceLib.BL.Services;
 using InsuranceLib.DAL.Models;
 using InsuranceLib.DAL.Repositories;
+using InsuranceWebApi.Helpers;
 using InsuranceWebApi.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -13,6 +15,7 @@ using System.Threading.Tasks;
 
 namespace InsuranceWebApi.Controllers
 {
+    [Authorize(Roles = Roles.Customer)]
     [Route("api/[controller]")]
     [ApiController]
     public class CustomersController : Controller
@@ -60,16 +63,84 @@ namespace InsuranceWebApi.Controllers
             this.queryRepo = queryRepo;
         }
 
+        [HttpPost("uploadDocument")]
+        public async Task<IActionResult> UploadDocument([FromBody] AddDocumentViewModel docVm)
+        {
+            Image image = new Image();
+            image.ImageTitle = docVm.DocumentTitle;
+            image.BaseEntityId = docVm.BaseEntityId;
+            image.ImageData = docVm.DocumentFile;
+
+            await imagesRepo.Add(image);
+            return Ok("Image uploaded.");
+        }
+
+        [HttpGet("InsuranceType/getTypes")]
+        public async Task<IActionResult> GetTypes()
+        {
+            return Ok(await typesRepo.GetAll());
+        }
+
+        [HttpGet("InsurancePlan/getPlans/{insuranceSchemeName}")]
+        public async Task<IActionResult> GetPlanByScheme(string insuranceSchemeName)
+        {
+            return Ok(await plansRepo.GetWhere(s => s.InsuranceSchemeTitle == insuranceSchemeName));
+        }
+
+        [HttpGet("InsuranceScheme/getSchemes")]
+        public async Task<IActionResult> GetSchemes()
+        {
+            List<SendSchemeWithImage> sendSchemes = new List<SendSchemeWithImage>();
+            var schemes = Enumerable.ToList(await schemesRepo.GetAll());
+            foreach (var scheme in schemes)
+            {
+                var type = await typesRepo.FirstOrDefault(t => t.TypeTitle == scheme.InsuranceTypeTitle);
+                SendSchemeWithImage sendSchemeWithImage = new SendSchemeWithImage()
+                {
+                    Id = scheme.Id,
+                    InsuranceSchemeTitle = scheme.InsuranceSchemeTitle,
+                    Information = scheme.Information,
+                    InsuranceTypeTitle = scheme.InsuranceTypeTitle,
+                    InsranceTypeImage = type.TypeImage,
+                    CreatedAt = scheme.CreatedAt,
+                };
+                sendSchemes.Add(sendSchemeWithImage);
+
+            }
+            return Ok(sendSchemes);
+        }
+
+        [HttpGet("getImagesByBaseId/{id}")]
+        public async Task<IActionResult> GetImagesByBaseId(string id)
+        {
+            return Ok(await imagesRepo.GetWhere(i => i.BaseEntityId == id));
+        }
+
+        [HttpDelete("deleteDocument/{id}")]
+        public async Task<IActionResult> DeleteDocument(Guid id)
+        {
+            await imagesRepo.Remove(id);
+            return Ok("Document Deleted.");
+        }
+
+        [HttpGet("InsuranceScheme/getSchemes/{insuranceTypeName}")]
+        public async Task<IActionResult> GetSchemeByType(string insuranceTypeName)
+        {
+            return Ok(await schemesRepo.GetWhere(s => s.InsuranceTypeTitle == insuranceTypeName));
+        }
+
         [HttpGet("getPolicies")]
         public async Task<IActionResult> GetPolicies()
         {
             return Ok(await policyRepo.GetAll());
         }
+
         [HttpGet("getPayments")]
         public async Task<IActionResult> GetPayments()
         {
             return Ok(await paymentsRepo.GetAll());
         }
+
         [HttpGet("getClaims")]
         public async Task<IActionResult> GetClaims()
         {

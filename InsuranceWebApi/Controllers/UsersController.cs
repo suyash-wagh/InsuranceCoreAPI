@@ -54,20 +54,21 @@ namespace InsuranceWebApi.Controllers
             this._configuration = configuration;
         }
 
-        //[Authorize(Roles = Roles.Admin)]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Employee)]
         [HttpGet("")]
         public async Task<IActionResult> GetAllUsers()
         {
             return Ok(await service.GetUsers());
         }
 
+        [Authorize(Roles = Roles.Agent + "," + Roles.Admin + "," + Roles.Employee +  "," + Roles.Customer)]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetUserById(string id)
         {
             return Ok(await service.GetUserById(id));
         }
 
-       // [Authorize(Roles = Roles.Admin)]
+        [Authorize(Roles = Roles.Admin)]
         [HttpPut("update-admin")]
         public async Task<IActionResult> UpdateAdmin([FromBody] User userVm)
         {
@@ -75,7 +76,7 @@ namespace InsuranceWebApi.Controllers
             return Ok("User updated.");
         }
 
-        [Authorize(Roles = Roles.Agent + "," + Roles.Admin + "," + Roles.Employee)]
+        [Authorize(Roles = Roles.Agent + "," + Roles.Admin + "," + Roles.Employee + "," + Roles.Customer)]
         [HttpPut("update-user")]
         public async Task<IActionResult> UpdateUser([FromBody] User userVm)
         {
@@ -92,12 +93,14 @@ namespace InsuranceWebApi.Controllers
             return Ok("User deleted");
         }
 
+        [Authorize(Roles = Roles.Admin + "," + Roles.Employee)]
         [HttpGet("getUsersByRoles/{role}")]
         public async Task<IActionResult> GetUsersByRoles(string role)
         {
             return Ok(await service.GetUsersByroles(role));
         }
 
+        [Authorize(Roles = Roles.Agent + "," + Roles.Admin + "," + Roles.Employee)]
         [HttpGet("getUsersByParentId/{parentId}")]
         public async Task<IActionResult> GetUsersByParentId(string parentId)
         {
@@ -277,7 +280,7 @@ namespace InsuranceWebApi.Controllers
 
         // Agent Actions ---------------------------------------------------------------------------------------->
 
-        [Authorize(Roles = Roles.Admin+","+Roles.Employee)]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Employee)]
         [HttpPost("addAgent")]
         public async Task<IActionResult> addAgent([FromBody] AddUserViewModel customerVm)
         {
@@ -350,7 +353,7 @@ namespace InsuranceWebApi.Controllers
 
         // Customer Actions ---------------------------------------------------------------------------------------->
 
-        //[Authorize(Roles = Roles.Agent + "," + Roles.Admin + "," + Roles.Employee)]
+        [Authorize(Roles = Roles.Agent + "," + Roles.Admin + "," + Roles.Employee)]
         [HttpPost("addCustomer")]
         public async Task<IActionResult> addCustomer([FromBody] AddUserViewModel customerVm)
         {

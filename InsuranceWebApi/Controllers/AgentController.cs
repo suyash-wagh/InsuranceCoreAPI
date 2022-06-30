@@ -1,12 +1,16 @@
 ﻿using InsuranceLib.DAL.Models;
 using InsuranceLib.DAL.Repositories;
+using InsuranceWebApi.Helpers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace InsuranceWebApi.Controllers
 {
+    [Authorize(Roles= Roles.Agent)]
     [Route("api/[controller]")]
     [ApiController]
     public class AgentController : ControllerBase
@@ -20,6 +24,9 @@ namespace InsuranceWebApi.Controllers
         private readonly IRepository<InsuranceClaim> claimsRepo;
         private readonly IRepository<Commission> commsRepo;
         private readonly IRepository<WithdrawAccount> wdaccountsRepo;
+        private readonly IRepository<Image> imagesRepo;
+        private readonly IRepository<State> statesRepo;
+        private readonly IRepository<City> citiesRepo;
 
         public AgentController(IRepository<InsuranceScheme> schemesRepo,
                                IRepository<InsurancePlan> plansRepo,
@@ -29,7 +36,10 @@ namespace InsuranceWebApi.Controllers
                                IRepository<Payment> paymentsRepo,
                                IRepository<InsuranceClaim> claimsRepo,
                                IRepository<Commission> commsRepo,
-                               IRepository<WithdrawAccount> wdaccountsRepo)
+                               IRepository<WithdrawAccount> wdaccountsRepo,
+                               IRepository<Image> imagesRepo,
+                               IRepository<State> statesRepo,
+                               IRepository<City> citiesRepo)
         {
             this.schemesRepo = schemesRepo;
             this.plansRepo = plansRepo;
@@ -40,6 +50,52 @@ namespace InsuranceWebApi.Controllers
             this.claimsRepo = claimsRepo;
             this.commsRepo = commsRepo;
             this.wdaccountsRepo = wdaccountsRepo;
+            this.imagesRepo = imagesRepo;
+            this.statesRepo = statesRepo;
+            this.citiesRepo = citiesRepo;
+        }
+
+
+        [HttpGet("getPaymentsByPolicyId/{policyId}")]
+        public async Task<IActionResult> GetPaymentsByPolicyId(string policyId)
+        {
+            return Ok(await paymentsRepo.GetWhere(p => p.PolicyId.ToString() == policyId));
+        }
+
+        [HttpGet("getAccountsByAgentId/{agentId}")]
+        public async Task<IActionResult> GetAccountsByAgentId(string agentId)
+        {
+            var accounts = await accountsRepo.GetWhere(a => a.AgentId == agentId);
+            var accountsList = Enumerable.ToList(accounts);
+
+            foreach (var account in accountsList)
+            {
+                var policies = await policyRepo.GetWhere(p => p.AccountId == account.Id);
+                var payments = await paymentsRepo.GetWhere(p => p.AccountId == account.Id);
+                var claims = await claimsRepo.GetWhere(c => c.AccountId == account.Id);
+                account.Policies = (List<Policy>)policies;
+                account.Payments = (List<Payment>)payments;
+                account.InsuranceClaims = (List<InsuranceClaim>)claims;
+            }
+            return Ok(accountsList);
+        }
+
+        [HttpGet("state/getStates")]
+        public async Task<IActionResult> GetStates()
+        {
+            return Ok(await statesRepo.GetAll());
+        }
+
+        [HttpGet("city/getCities")]
+        public async Task<IActionResult> GetCities()
+        {
+            return Ok(await citiesRepo.GetAll());
+        }
+
+        [HttpGet("getImagesByBaseId/{id}")]
+        public async Task<IActionResult> GetImagesByBaseId(string id)
+        {
+            return Ok(await imagesRepo.GetWhere(i => i.BaseEntityId == id));
         }
 
         [HttpGet("getCommissions")]
