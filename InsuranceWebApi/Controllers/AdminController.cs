@@ -161,6 +161,7 @@ namespace InsuranceWebApi.Controllers
                     CreatedAt = scheme.CreatedAt,
                 };
                 sendSchemes.Add(sendSchemeWithImage);
+                
             }
             return Ok(sendSchemes);
         }

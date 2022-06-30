@@ -64,11 +64,11 @@ namespace InsuranceWebApi
 
             services.AddScoped<UsersService>();
             
-            services.AddTransient<IUsersRepository<User>, UsersRepository>();
+            services.AddScoped<IUsersRepository<User>, UsersRepository>();
 
             //services.AddSingleton(tokenValidationParameters);
 
-            services.AddScoped(typeof(IRepository<>), typeof(RepositoryBase<>));
+            services.AddTransient(typeof(IRepository<>), typeof(RepositoryBase<>));
 
             services.AddIdentity<User, IdentityRole>()
              .AddEntityFrameworkStores<InsuranceDbContext>()

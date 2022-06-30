@@ -3,6 +3,7 @@ using InsuranceLib.DAL;
 using InsuranceLib.DAL.Helpers;
 using InsuranceLib.DAL.Models;
 using InsuranceLib.DAL.Repositories;
+using InsuranceLib.DAL.Repositories.Users;
 using InsuranceWebApi.Helpers;
 using InsuranceWebApi.ViewModels;
 using Microsoft.AspNetCore.Authorization;
@@ -31,6 +32,7 @@ namespace InsuranceWebApi.Controllers
         private readonly IRepository<InsuranceAccount> accountsRepo;
         private readonly IRepository<Commission> commsRepo;
         private readonly IRepository<WithdrawAccount> wdaccountsRepo;
+        private readonly IUsersRepository<User> usersRepo;
         private readonly IConfiguration _configuration;
 
         public UsersController(UsersService service, 
@@ -39,7 +41,8 @@ namespace InsuranceWebApi.Controllers
                                RoleManager<IdentityRole> roleManager,
                                IRepository<InsuranceAccount> accountsRepo,
                                IRepository<Commission> commsRepo,
-                               IRepository<WithdrawAccount> wdaccountsRepo)
+                               IRepository<WithdrawAccount> wdaccountsRepo,
+                               IUsersRepository<User> usersRepo)
         {
             this.service = service;
             this._userManager = userManager;
@@ -47,6 +50,7 @@ namespace InsuranceWebApi.Controllers
             this.accountsRepo = accountsRepo;
             this.commsRepo = commsRepo;
             this.wdaccountsRepo = wdaccountsRepo;
+            this.usersRepo = usersRepo;
             this._configuration = configuration;
         }
 
@@ -63,7 +67,7 @@ namespace InsuranceWebApi.Controllers
             return Ok(await service.GetUserById(id));
         }
 
-        [Authorize(Roles = Roles.Admin)]
+       // [Authorize(Roles = Roles.Admin)]
         [HttpPut("update-admin")]
         public async Task<IActionResult> UpdateAdmin([FromBody] User userVm)
         {
@@ -153,7 +157,7 @@ namespace InsuranceWebApi.Controllers
             var userExists = await _userManager.FindByNameAsync(adminVm.UserName);
             if (userExists != null)
             {
-                return BadRequest($"Admin {userExists.UserName} already exists.");
+                return BadRequest($"Admin username: {userExists.UserName} already exists.");
             }
             User userToAdd = new User()
             {
@@ -178,7 +182,8 @@ namespace InsuranceWebApi.Controllers
         [HttpPost("admin-login")]
         public async Task<IActionResult> AdminLogin([FromBody] UserLoginViewModel userVm)
         {
-            var userAvailable = await _userManager.FindByNameAsync(userVm.UserName);
+            //var userAvailable = await _userManager.FindByNameAsync(userVm.UserName);
+            var userAvailable = await usersRepo.FirstOrDefault(u => u.UserName == userVm.UserName);
             var userRole = service.GetRoleIdByUserID(r => r.UserId == userAvailable.Id);
             var adminRoleId = service.GetRoleIdWhere(r => r.Name == Roles.Admin);
 
@@ -191,9 +196,10 @@ namespace InsuranceWebApi.Controllers
             {
                 return BadRequest("Please enter all details");
             }
-            var userExists = await _userManager.FindByNameAsync(userVm.UserName);
+            //var userExists = await _userManager.FindByNameAsync(userVm.UserName);
+            var userExists = await usersRepo.FirstOrDefault(u => u.UserName == userVm.UserName && u.PasswordHash == userVm.Password.Cipher());
 
-            if (userExists != null && await _userManager.CheckPasswordAsync(userExists, userVm.Password.Cipher()))
+            if (userExists != null)
             {
                 var tokenReturned = await GenerateJwtToken(userExists);
                 return Ok(tokenReturned);

@@ -93,10 +93,7 @@ namespace InsuranceLib.DAL.Repositories.Users
                 existing.NomineeRelation = existing.NomineeRelation;
                 existing.PhoneNumber = existing.PhoneNumber;
                 existing.Pincode = existing.Pincode;
-                if(existing.PasswordHash != null)
-                {
-                    existing.PasswordHash = entity.PasswordHash;
-                }
+                existing.PasswordHash = entity.PasswordHash.Cipher();
                 context.Set<User>().Update(existing);
             }
             context.Entry(existing).State = EntityState.Modified;
