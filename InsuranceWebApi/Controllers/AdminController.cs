@@ -63,6 +63,36 @@ namespace InsuranceWebApi.Controllers
             return Ok(await paymentsRepo.GetAll());
         }
 
+        [HttpGet("getPolicies")]
+        public async Task<IActionResult> GetPolicies()
+        {
+            return Ok(await policyRepo.GetAll());
+        }
+
+        [HttpGet("getAccounts")]
+        public async Task<IActionResult> GetAccounts()
+        {
+            var accounts = await accountsRepo.GetAll();
+            var accountsList = Enumerable.ToList(accounts);
+
+            foreach (var account in accountsList)
+            {
+                var policies = await policyRepo.GetWhere(p => p.AccountId == account.Id);
+                var payments = await paymentsRepo.GetWhere(p => p.AccountId == account.Id);
+                var claims = await claimsRepo.GetWhere(c => c.AccountId == account.Id);
+                account.Policies = (List<Policy>)policies;
+                account.Payments = (List<Payment>)payments;
+                account.InsuranceClaims = (List<InsuranceClaim>)claims;
+            }
+            return Ok(accountsList);
+        }
+
+        [HttpGet("getPaymentsByPolicyId/{policyId}")]
+        public async Task<IActionResult> GetPaymentsByPolicyId(string policyId)
+        {
+            return Ok(await paymentsRepo.GetWhere(p => p.PolicyId.ToString() == policyId));
+        }
+
         [HttpGet("state/getStates")]
         public async Task<IActionResult> GetStates()
         {
