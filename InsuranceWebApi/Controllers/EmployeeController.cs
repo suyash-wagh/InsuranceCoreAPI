@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace InsuranceWebApi.Controllers
@@ -122,6 +124,35 @@ namespace InsuranceWebApi.Controllers
         public async Task<IActionResult> GetSchemeById(Guid id)
         {
             return Ok(await schemesRepo.FirstOrDefault(s => s.Id == id));
+        }
+
+        [HttpGet("InsuranceScheme/getMainSchemes")]
+        public async Task<IActionResult> GetMainSchemesById()
+        {
+            return Ok(await schemesRepo.GetAll());
+        }
+
+        [HttpGet("InsuranceScheme/getSchemes")]
+        public async Task<IActionResult> GetSchemes()
+        {
+            List<SendSchemeWithImage> sendSchemes = new List<SendSchemeWithImage>();
+            var schemes = Enumerable.ToList(await schemesRepo.GetAll());
+            foreach (var scheme in schemes)
+            {
+                var type = await typesRepo.FirstOrDefault(t => t.TypeTitle == scheme.InsuranceTypeTitle);
+                SendSchemeWithImage sendSchemeWithImage = new SendSchemeWithImage()
+                {
+                    Id = scheme.Id,
+                    InsuranceSchemeTitle = scheme.InsuranceSchemeTitle,
+                    Information = scheme.Information,
+                    InsuranceTypeTitle = scheme.InsuranceTypeTitle,
+                    InsranceTypeImage = type.TypeImage,
+                    CreatedAt = scheme.CreatedAt,
+                };
+                sendSchemes.Add(sendSchemeWithImage);
+
+            }
+            return Ok(sendSchemes);
         }
 
         [HttpDelete("InsuranceScheme/{id}")]

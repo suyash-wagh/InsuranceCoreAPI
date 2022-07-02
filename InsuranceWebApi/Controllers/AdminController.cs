@@ -15,7 +15,7 @@ using System.Linq;
 
 namespace InsuranceWebApi.Controllers
 {
-   // [Authorize(Roles = Roles.Admin)]
+    // [Authorize(Roles = Roles.Admin)]
     [Route("api/[controller]")]
     [ApiController]
     public class AdminController : ControllerBase
@@ -55,6 +55,12 @@ namespace InsuranceWebApi.Controllers
             this.paymentsRepo = paymentsRepo;
             this.claimsRepo = claimsRepo;
             this.queryRepo = queryRepo;
+        }
+
+        [HttpGet("getPayments")]
+        public async Task<IActionResult> GetPayments()
+        {
+            return Ok(await paymentsRepo.GetAll());
         }
 
         [HttpGet("state/getStates")]
@@ -161,16 +167,22 @@ namespace InsuranceWebApi.Controllers
                     CreatedAt = scheme.CreatedAt,
                 };
                 sendSchemes.Add(sendSchemeWithImage);
-                
+
             }
             return Ok(sendSchemes);
         }
-            
+
         [AllowAnonymous]
         [HttpGet("InsuranceScheme/getScheme/{id}")]
         public async Task<IActionResult> GetSchemeById(Guid id)
         {
             return Ok(await schemesRepo.FirstOrDefault(s => s.Id == id));
+        }
+
+        [HttpGet("InsuranceScheme/getMainSchemes")]
+        public async Task<IActionResult> GetMainSchemesById()
+        {
+            return Ok(await schemesRepo.GetAll());
         }
 
         [HttpGet("InsuranceScheme/getSchemes/{insuranceTypeName}")]
@@ -292,14 +304,14 @@ namespace InsuranceWebApi.Controllers
         public async Task<IActionResult> PostType([FromBody] AddTypeViewModel planVm)
         {
             if (!ModelState.IsValid) return BadRequest("Not a valid input.");
-            
+
             await typesRepo.Add(new InsuranceType()
             {
                 TypeTitle = planVm.TypeTitle,
                 TypeImage = planVm.TypeImage,
                 IsActive = planVm.IsActive,
             });
-     
+
             return Ok("Type Added with an image.");
         }
 
